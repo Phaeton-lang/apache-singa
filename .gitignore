@@ -6,7 +6,10 @@ __pycache__
 *~
 .\#*
 \#*\#
-
+examples/cpp/cifar10/cifar-10-batches-bin/
+examples/cpp/cifar10/cifar-10-batches-py/
+examples/cpp/cifar10/cifar-10-binary.tar.gz
+examples/cpp/cifar10/cifar-10-python.tar.gz
 
 
 *.o
