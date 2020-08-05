@@ -34,6 +34,9 @@ Distributed deep learning system
 ## Quick Start
 
 * [Installation](http://singa.apache.org/docs/installation)
+
+Build from source, please refer to: <http://singa.apache.org/docs/build/#use-native-tools-to-build-singa-on-ubuntu>
+
 * [Examples](examples)
 
 ## Issues
