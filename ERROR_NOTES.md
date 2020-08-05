@@ -34,7 +34,7 @@ $ pip3 install -U protobuf
 ```
 
 
-### 2、singa python import
+### 2. singa python import
 
 由于从源码编译的singa是安装在虚拟环境`./anaconda2/envs/intel-caffe/lib/python3.6/site-packages/singa`中，所以需要：
 
@@ -46,4 +46,15 @@ from singa import tensor
 
 示例可以参考：<http://singa.apache.org/docs/examples/>中的Colab示例，如：<https://colab.research.google.com/drive/1fbGUs1AsoX6bU5F745RwQpohP4bHTktq#scrollTo=xM7G0MjzKSVj>
 
+### 3. cudnn build error
+
+文件`cmake/Thirdparty/FindCUDNN.cmake`中定义了寻找cudnn函数，有时找不到系统库文件，此时可以通过手动修改该文件:
+
+```
+# FIND_PATH(CUDNN_INCLUDE_DIR NAME "cudnn.h" PATHS "$ENV{CMAKE_INCLUDE_PATH}")
+# FIND_LIBRARY(CUDNN_LIBRARIES NAME "libcudnn.so" PATHS "$ENV{CMAKE_LIBRARY_PATH}")
+
+set(CUDNN_INCLUDE_DIR "/usr/local/cuda-10.2/include/")
+set(CUDNN_LIBRARIES "/usr/local/cuda-10.2/lib64/libcudnn.so")
+```
 
