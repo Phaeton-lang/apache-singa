@@ -22,6 +22,8 @@ examples/cpp/cifar10/cifar-10-python.tar.gz
 *.pb.cc
 *.cxx
 
+doxygen/docs
+
 build/
 thirdparty/*
 !thirdparty/install.sh

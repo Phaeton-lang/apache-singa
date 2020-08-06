@@ -1,0 +1,16 @@
+/// \mainpage Apache SINGA
+///
+/// \section main_intro Introduction
+/// Welcome to Apache Singa.
+///
+/// This documentation describes the **internal** software that makes
+/// up SINGA, not the **external** use of  SINGA. There are no instructions
+/// here on how to use SINGA, only the APIs that make up the software. For usage
+/// instructions, please see the programmer's guide or reference manual.
+///
+/// \section Caveat
+/// This documentation is generated directly from the source code with doxygen.
+/// Since SINGA is constantly under active development, what you're about to
+/// read is out of date! However, it may still be useful since certain portions
+/// of SINGA are very stable.
+///
