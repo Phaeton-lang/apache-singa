@@ -20,6 +20,10 @@
 #include "singa/core/memory.h"
 
 #include <iostream>
+#include <fstream>
+#include <chrono>
+#include <stdint.h>
+#include <cuda.h>
 
 #include "singa/proto/core.pb.h"
 #include "singa/utils/logging.h"
@@ -92,6 +96,16 @@ void CnMemPool::Malloc(void **ptr, const size_t size) {
   cnmemStatus_t status = cnmemMalloc(ptr, size, NULL);
   CHECK_EQ(status, cnmemStatus_t::CNMEM_STATUS_SUCCESS)
       << " " << cnmemGetErrorString(status);
+#if 1
+  std::fstream mem_info_log("mem-info.log", std::ios::in| std::ios::out| std::ios::app);
+  int64_t time_stamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  mem_info_log << "MALLOC: " << *ptr << ' ' << size << ' ' << time_stamp << '\n';
+  size_t available_memory = 0, total_memory = 0, used_memory = 0;
+  cudaMemGetInfo(&available_memory, &total_memory);
+  used_memory = total_memory - available_memory;
+  std::fstream cuda_mem_log("cuda-memory.log", std::ios::in| std::ios::out| std::ios::app);
+  cuda_mem_log << (double)(used_memory) / 1024.0 / 1024.0 << ' ' << (double)(available_memory) / 1024.0 / 1024.0 << ' ' << (double)(total_memory) / 1024.0 / 1024.0 << '\n';
+#endif
 }
 
 void CnMemPool::Free(void *ptr) {
@@ -100,6 +114,16 @@ void CnMemPool::Free(void *ptr) {
   cnmemStatus_t status = cnmemFree(ptr, NULL);
   CHECK_EQ(status, cnmemStatus_t::CNMEM_STATUS_SUCCESS)
       << " " << cnmemGetErrorString(status);
+#if 1
+  std::fstream mem_info_log("mem-info.log", std::ios::in| std::ios::out| std::ios::app);
+  int64_t time_stamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  mem_info_log << "FREE: " << ptr << ' ' << time_stamp << '\n';
+  size_t available_memory = 0, total_memory = 0, used_memory = 0;
+  cudaMemGetInfo(&available_memory, &total_memory);
+  used_memory = total_memory - available_memory;
+  std::fstream cuda_mem_log("cuda-memory.log", std::ios::in| std::ios::out| std::ios::app);
+  cuda_mem_log << (double)(used_memory) / 1024.0 / 1024.0 << ' ' << (double)(available_memory) / 1024.0 / 1024.0 << ' ' << (double)(total_memory) / 1024.0 / 1024.0 << '\n';
+#endif
 }
 
 // ===========================================================================
