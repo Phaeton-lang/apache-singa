@@ -17,6 +17,10 @@
 # under the License.
 #
 
+import sys
+SINGA_PATH='/home/extend/lijiansong/work-space/anaconda2/envs/intel-caffe/lib/python3.6/site-packages'
+sys.path.append(SINGA_PATH)
+
 from singa import tensor
 from singa.tensor import Tensor
 from singa import autograd

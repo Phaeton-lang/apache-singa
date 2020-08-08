@@ -20,6 +20,7 @@
 import sys
 SINGA_PATH='/home/extend/lijiansong/work-space/anaconda2/envs/intel-caffe/lib/python3.6/site-packages'
 sys.path.append(SINGA_PATH)
+
 from singa import singa_wrap as singa
 from singa import opt
 from singa import device
@@ -29,6 +30,7 @@ import time
 import argparse
 from PIL import Image
 
+import vgg
 
 # Data Augmentation
 def augmentation(x, batch_size):

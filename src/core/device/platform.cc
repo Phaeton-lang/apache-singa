@@ -136,8 +136,10 @@ const vector<shared_ptr<Device>> Platform::CreateCudaGPUsOn(
   auto pool = std::make_shared<CnMemPool>(conf);
   vector<shared_ptr<Device>> ret;
   for (size_t i = 0; i < devices.size(); i++) {
-    if (UsedDevice[devices[i]] == nullptr)
+    if (UsedDevice[devices[i]] == nullptr) {
+      // TODO: replace CudaGPU with a new GPU device with swap in/out support.
       UsedDevice[devices[i]] = std::make_shared<CudaGPU>(devices[i], pool);
+    }
     ret.push_back(UsedDevice[devices[i]]);
   }
   mtx_.unlock();

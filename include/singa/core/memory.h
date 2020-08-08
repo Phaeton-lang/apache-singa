@@ -54,6 +54,7 @@ class DeviceMemPool {
 };
 
 #ifdef USE_CUDA
+// TODO: define a new memory pool with swap in/out support
 class CnMemPool : public DeviceMemPool {
  public:
   // Create the mem pool by setting the devices [0, numDevices), and

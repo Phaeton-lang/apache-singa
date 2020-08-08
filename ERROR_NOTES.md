@@ -58,3 +58,10 @@ set(CUDNN_INCLUDE_DIR "/usr/local/cuda-10.2/include/")
 set(CUDNN_LIBRARIES "/usr/local/cuda-10.2/lib64/libcudnn.so")
 ```
 
+### 4. specify SWIG path
+
+修改`CMakeLists.txt`:
+
+```
+SET(SWIG_EXECUTABLE "/usr/local/bin/swig")
+```
