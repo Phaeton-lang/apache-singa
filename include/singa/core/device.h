@@ -67,6 +67,9 @@ class Device {
 
   static void EnableLazyAlloc(bool enbale) { lazy_alloc_ = enbale; }
 
+  void EstimateGraphNodeTime();
+  void EstimateBlockSwapTime();
+
   /// Called by Tensor.
   Block* NewBlock(int size);
 

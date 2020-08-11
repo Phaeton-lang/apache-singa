@@ -51,15 +51,17 @@ enum BlockType { kUnknow, kInput, kParam, kInter, kEnd };
 
 class Node {
  public:
-  Node(int id, OpFunc &&op) : id_(id), op_(std::move(op)) {}
+  Node(int id, OpFunc &&op) : id_(id), op_(std::move(op)), est_time_(0.) {}
 
   void AddInEdge(Edge *in_edge);
   void AddOutEdge(Edge *out_edge);
+  void SetEstimeTime(double time) { est_time_ = time; }
 
   // getters of Node
   int id() const { return id_; }
   const EdgeVec &in_edges() const { return in_edges_; }
   const EdgeVec &out_edges() const { return out_edges_; }
+  OpFunc op() { return op_; }
 
  private:
   friend Graph;
@@ -68,6 +70,7 @@ class Node {
   OpFunc op_;
   EdgeVec in_edges_;
   EdgeVec out_edges_;
+  double est_time_=0.;  // us
 };
 
 class Edge {
@@ -166,6 +169,7 @@ class Graph {
   void AnalyzeNodes();
   void AnalyzeEdges();
   void AddSyncOp(function<void(Context *)> &&op);
+  void Draw();
 
   // static void CUDART_CB Callback(cudaStream_t stream, cudaError_t status,
   //                                void *data);

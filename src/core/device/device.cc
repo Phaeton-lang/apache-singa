@@ -20,6 +20,8 @@
 
 namespace singa {
 
+const int WARMUP_TIMES = 8;
+const int REPEAT_TIMES = 32;
 bool Device::lazy_alloc_ = true;
 
 Device::Device(int id, int num_executors)
@@ -33,6 +35,49 @@ Device::~Device() {
   if (graph_) {
     delete graph_;
   }
+}
+
+void Device::EstimateGraphNodeTime() {
+   for (auto &&node : graph_->nodes()) {
+       double time = 0;
+       clock_t start, end;
+       for (int i=0; i<REPEAT_TIMES+WARMUP_TIMES; ++i) {
+           if (i == WARMUP_TIMES) { start = clock(); }
+           DoExec(std::move(node->op()), 0);
+       }
+       end = clock();
+       time = (double)(end-start)*1e6/REPEAT_TIMES/CLOCKS_PER_SEC;
+       node->SetEstimeTime(time);
+   }
+}
+
+void Device::EstimateBlockSwapTime() {
+    for (auto &&blk_info : graph_->blocks()) {
+        auto blk = blk_info.first;
+        double time = 0;
+        clock_t start = 0, end = 0;
+        for (int i=0; i<REPEAT_TIMES+WARMUP_TIMES; ++i) {
+            if (i == WARMUP_TIMES) { start = clock(); }
+            // TODO:
+        }
+        end = clock();
+        // unit: us
+        time = (double)(end-start)*1e6/REPEAT_TIMES/CLOCKS_PER_SEC;
+        blk->SetEstSwapInTime(time);
+    }
+    for (auto &&blk_info : graph_->blocks()) {
+        auto blk = blk_info.first;
+        double time = 0;
+        clock_t start = 0, end = 0;
+        for (int i=0; i<REPEAT_TIMES+WARMUP_TIMES; ++i) {
+            if (i == WARMUP_TIMES) { start = clock(); }
+            // TODO:
+        }
+        end = clock();
+        // unit: us
+        time = (double)(end-start)*1e6/REPEAT_TIMES/CLOCKS_PER_SEC;
+        blk->SetEstSwapOutTime(time);
+    }
 }
 
 void Device::Exec(function<void(Context*)>&& fn,
