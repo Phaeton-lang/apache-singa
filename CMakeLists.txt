@@ -102,6 +102,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 IF (USE_CUDA)
     include(ExternalProject)
+    IF (NOT EXISTS ${CMAKE_BINARY_DIR}/cnmem)
     ExternalProject_Add(cnmem
         GIT_REPOSITORY "https://github.com/nusdbsystem/cnmem.git"
         GIT_TAG "master"
@@ -110,6 +111,7 @@ IF (USE_CUDA)
         "-H${CMAKE_BINARY_DIR}/cnmem" "-B."
         "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}"
         )
+    ENDIF()
     #ADD_SUBDIRECTORY(lib/cnmem)
     #LIST(APPEND SINGA_LINKER_LIBS cnmem)
     SET(global_cuda_objs "")
