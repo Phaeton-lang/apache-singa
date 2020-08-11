@@ -113,7 +113,7 @@ if __name__ == "__main__":
     label = np.asarray([5 * a + 1 > b for (a, b) in zip(x, y)]).astype(np.int32)
     data = np.array([[a, b] for (a, b) in zip(x, y)], dtype=np.float32)
 
-    dev = device.create_cuda_gpu_on(0)
+    dev = device.create_swap_cuda_gpu_on(0)
     sgd = opt.SGD(0.05)
     tx = tensor.Tensor((400, 2), dev, tensor.float32)
     ty = tensor.Tensor((400,), dev, tensor.int32)

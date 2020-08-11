@@ -137,7 +137,6 @@ const vector<shared_ptr<Device>> Platform::CreateCudaGPUsOn(
   vector<shared_ptr<Device>> ret;
   for (size_t i = 0; i < devices.size(); i++) {
     if (UsedDevice[devices[i]] == nullptr) {
-      // TODO: replace CudaGPU with a new GPU device with swap in/out support.
       UsedDevice[devices[i]] = std::make_shared<CudaGPU>(devices[i], pool);
     }
     ret.push_back(UsedDevice[devices[i]]);
@@ -146,6 +145,40 @@ const vector<shared_ptr<Device>> Platform::CreateCudaGPUsOn(
   return ret;
 }
 
+// TODO: Implement SwapCudaGPU.
+const vector<shared_ptr<Device>> Platform::CreateSwapCudaGPUs(
+    const size_t num_devices, size_t init_size) {
+  const vector<int> gpus = GetGPUIDs();
+  CHECK_LE(num_devices, gpus.size());
+  vector<int> use_gpus(gpus.begin(), gpus.begin() + num_devices);
+  return CreateSwapCudaGPUsOn(use_gpus, init_size);
+}
+
+const vector<shared_ptr<Device>> Platform::CreateSwapCudaGPUsOn(
+    const vector<int>& devices, size_t init_size) {
+  MemPoolConf conf;
+  if (init_size > 0) conf.set_init_size(init_size);
+  size_t bytes = conf.init_size() << 20;
+  for (auto device : devices) {
+    conf.add_device(device);
+    CHECK_LE(bytes, Platform::GetGPUMemSize(device).first);
+  }
+  mtx_.lock();
+  if (UsedDevice.size() == 0) {
+    int count = Platform::GetNumGPUs();
+    for (int i = 0; i < count; i++) UsedDevice.push_back(nullptr);
+  }
+  auto pool = std::make_shared<CnMemPool>(conf);
+  vector<shared_ptr<Device>> ret;
+  for (size_t i = 0; i < devices.size(); i++) {
+    if (UsedDevice[devices[i]] == nullptr) {
+      UsedDevice[devices[i]] = std::make_shared<SwapCudaGPU>(devices[i], pool);
+    }
+    ret.push_back(UsedDevice[devices[i]]);
+  }
+  mtx_.unlock();
+  return ret;
+}
 #endif  // USE_CUDA
 
 #ifdef USE_OPENCL

@@ -126,6 +126,7 @@ class Device {
  private:
   Device(){};
 
+  // Note: class Graph is defined in file: include/singa/core/scheduler.h
  protected:
   friend class Block;
   friend class Graph;
@@ -213,6 +214,38 @@ class CudaGPU : public Device {
 };
 
 /// CudaCPU which uses cudaMallocHost to allocate pinned memory for host.
+
+// Represent a Nvidia GPU which runs cuda code and supports variable swapping into host CPU.
+class SwapCudaGPU : public Device {
+ public:
+  ~SwapCudaGPU();
+  /// Construct the device using default mem pool setting.
+  SwapCudaGPU(int id = 0);
+  /// Construct the device given the physical device ID and memory pool.
+  SwapCudaGPU(int id, std::shared_ptr<DeviceMemPool> pool);
+
+  void SetRandSeed(unsigned seed) override;
+  size_t GetAllocatedMem() override;
+  void Sync() override;
+
+ protected:
+  void DoExec(function<void(Context*)>&& fn, int executor) override;
+
+  void CopyToFrom(void* dst, const void* src, size_t nBytes,
+                  CopyDirection direction, Context* ctx) override;
+
+  /// Allocate cpu memory.
+  void* Malloc(int size) override;
+
+  /// Free cpu memory.
+  void Free(void* ptr) override;
+
+ private:
+  void Setup();
+
+ private:
+  shared_ptr<DeviceMemPool> pool_;
+};
 
 #endif  // USE_CUDA
 
@@ -303,6 +336,14 @@ class Platform {
 
   /// Create a set of CudaGPU Device using given GPU IDs.
   static const std::vector<std::shared_ptr<Device>> CreateCudaGPUsOn(
+      const std::vector<int>& devices, size_t init_size = 0);
+
+  /// Create a set of SwapCudaGPU Device using 'num_devices' free GPUs.
+  static const std::vector<std::shared_ptr<Device>> CreateSwapCudaGPUs(
+      const size_t num_devices, size_t init_size = 0);
+
+  /// Create a set of SwapCudaGPU Device using given GPU IDs.
+  static const std::vector<std::shared_ptr<Device>> CreateSwapCudaGPUsOn(
       const std::vector<int>& devices, size_t init_size = 0);
 
   static std::vector<std::shared_ptr<Device>> UsedDevice;

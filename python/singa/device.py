@@ -138,6 +138,58 @@ def create_cuda_gpu_on(device_id, set_default=True):
         set_default_device(devices[0])
     return devices[0]
 
+def create_swap_cuda_gpus(num):
+    '''Create a list of CudaGPU devices.
+
+    Args:
+        num (int): number of device to create.
+    Returns:
+        a list of swig converted CudaGPU devices.
+    '''
+    assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
+    return singa.Platform.CreateSwapCudaGPUs(num)
+
+
+def create_swap_cuda_gpu(set_default=True):
+    '''Create a single CudaGPU device.
+
+    Returns:
+        a swig converted CudaGPU device.
+    '''
+    assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
+    devices = singa.Platform.CreateSwapCudaGPUs(1)
+    if set_default is True:
+        set_default_device(devices[0])
+    return devices[0]
+
+
+def create_swap_cuda_gpus_on(device_ids):
+    '''Create a list of CudaGPU devices.
+
+    Args:
+        device_ids (list): a list of GPU card IDs.
+
+    Returns:
+        a list of swig converted CudaGPU devices.
+    '''
+    assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
+    return singa.Platform.CreateSwapCudaGPUsOn(device_ids)
+
+
+def create_swap_cuda_gpu_on(device_id, set_default=True):
+    '''Create a CudaGPU device on the given device ID.
+
+    Args:
+        device_id (int): GPU card ID.
+
+    Returns:
+        a swig converted CudaGPU device.
+    '''
+    assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
+    devices = create_swap_cuda_gpus_on([device_id])
+    if set_default is True:
+        set_default_device(devices[0])
+    return devices[0]
 
 def create_opencl_device():
     '''Create the default OpenCL device.
