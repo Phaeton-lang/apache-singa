@@ -111,7 +111,7 @@ const Tensor CudnnBatchNorm::Forward(int flag, const Tensor& input) {
               runningMeanBlock->mutable_data(), runningVarBlock->mutable_data(),
               epsilon, saveMeanBlock->mutable_data(),
               saveVarBlock->mutable_data()));
-        },
+        }, OpType::kFwdBN,
         {x.block(), bnScale_.block(), bnBias_.block()},
         {output.block(), runningMean_.block(), runningVariance_.block(),
          resultSaveMean_.block(), resultSaveVariance_.block()});
@@ -131,7 +131,7 @@ const Tensor CudnnBatchNorm::Forward(int flag, const Tensor& input) {
               inBlock->data(), shape_desc_, outBlock->mutable_data(),
               param_desc_, bnScaleBlock->data(), bnBiasBlock->data(),
               runningMeanBlock->data(), runningVarBlock->data(), epsilon));
-        },
+        }, OpType::kFwdBN,
         {x.block(), bnScale_.block(), bnBias_.block(), runningMean_.block(),
          runningVariance_.block()},
         {output.block()});
@@ -166,7 +166,7 @@ const std::pair<Tensor, vector<Tensor>> CudnnBatchNorm::Backward(
               dbnBiasBlock->mutable_data(), epsilon, saveMeanBlock->data(),
               saveVarBlock->data()));
 
-        },
+        }, kBwdBN,
         {x.block(), grad.block(), bnScale_.block(), resultSaveMean_.block(),
          resultSaveVariance_.block()},
         {dx.block(), dbnScale_.block(), dbnBias_.block()});

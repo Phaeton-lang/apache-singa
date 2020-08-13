@@ -85,7 +85,7 @@ const Tensor CudnnSoftmax::Forward(int flag, const Tensor& input) {
                         CUDNN_SOFTMAX_MODE_INSTANCE,
                         &alpha, this->desc_, inblock->data(), &beta,
                         this->desc_, outblock->mutable_data());
-  }, {input.block()}, {output.block()});
+  }, OpType::kFwdSoftmax, {input.block()}, {output.block()});
   if (flag & kTrain) buf_.push(output);
   return output;
 }
@@ -106,7 +106,7 @@ const std::pair<Tensor, vector<Tensor>> CudnnSoftmax::Backward(
                          &alpha, this->desc_, yblock->data(), this->desc_,
                          dyblock->data(), &beta, this->desc_,
                          dxblock->mutable_data());
-  }, {grad.block(), output.block()}, {dx.block()});
+  }, OpType::kBwdSoftmax, {grad.block(), output.block()}, {dx.block()});
   return std::make_pair(dx, param_grad);
 }
 }  // namespace singa

@@ -333,7 +333,7 @@ const vector<Tensor> CudnnRNN::Forward(int flag, const vector<Tensor> &inputs) {
         this->workspace_.Size(), rspace->mutable_data(),
         this->reserve_space_.Size());
       // clang-format on
-    },
+    }, kFwdRNN,
     {inb, wb, hxb, cxb}, {outb, hyb, cyb, wspace, rspace});
     buf_.push(input);
     buf_.push(output);
@@ -355,7 +355,7 @@ const vector<Tensor> CudnnRNN::Forward(int flag, const vector<Tensor> &inputs) {
         this->cy_desc_, cyb == nullptr ? nullptr : cyb->mutable_data(),
         wspace->mutable_data(), this->workspace_.Size());
       // clang-format on
-    }, {inb, wb, hxb, cxb}, {outb, hyb, cyb, wspace});
+    }, kFwdRNN, {inb, wb, hxb, cxb}, {outb, hyb, cyb, wspace});
   }
   auto outputs =
     SplitOutput(num_x, hidden_size_ * num_directions_, inputs, output);
@@ -436,7 +436,7 @@ int flag, const vector<Tensor> &grads) {
       this->dweight_desc_, dwb->mutable_data(),
       rspace->data(), this->reserve_space_.Size());
     // clang-format on
-  },
+  }, OpType::kBwdRNN,
   {yb, dyb, dhyb, dcyb, xb, wb, wspace, rspace},
   {dxb, dwb, dhxb, dcxb, wspace, rspace});
 

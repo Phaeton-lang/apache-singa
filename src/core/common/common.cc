@@ -16,11 +16,96 @@
  * limitations under the License.
  */
 
+#include <cassert>
 #include "singa/core/common.h"
 
 #include "singa/core/device.h"
 
 namespace singa {
+
+std::string to_string(OpType type) {
+#define AddOPType(tp) case OpType::k##tp: return #tp;
+    switch (type) {
+        AddOPType(Undefined)
+        AddOPType(CopyH2H)
+        AddOPType(CopyH2D)
+        AddOPType(CopyD2H)
+        AddOPType(CopyD2D)
+        AddOPType(Sync)
+        AddOPType(FwdPool)
+        AddOPType(BwdPool)
+        AddOPType(FwdBN)
+        AddOPType(BwdBN)
+        AddOPType(FwdRNN)
+        AddOPType(BwdRNN)
+        AddOPType(FwdActivation)
+        AddOPType(BwdActivation)
+        AddOPType(FwdDropout)
+        AddOPType(BwdDropout)
+        AddOPType(FwdConv)
+        AddOPType(BwdConvBias)
+        AddOPType(BwdConvWeight)
+        AddOPType(BwdConvNeuron)
+        AddOPType(FwdSoftmax)
+        AddOPType(BwdSoftmax)
+        AddOPType(FwdLrn)
+        AddOPType(BwdLrn)
+        AddOPType(CastType)
+        AddOPType(L1)
+        AddOPType(L2)
+        AddOPType(Abs)
+        AddOPType(Ceil)
+        AddOPType(Exp)
+        AddOPType(Log)
+        AddOPType(ReLU)
+        AddOPType(Sigmoid)
+        AddOPType(SoftPlus)
+        AddOPType(SoftSign)
+        AddOPType(Sign)
+        AddOPType(Sqrt)
+        AddOPType(Square)
+        AddOPType(Transform)
+        AddOPType(Cos)
+        AddOPType(Cosh)
+        AddOPType(Acos)
+        AddOPType(Acosh)
+        AddOPType(Sin)
+        AddOPType(Sinh)
+        AddOPType(Asin)
+        AddOPType(Asinh)
+        AddOPType(Tan)
+        AddOPType(Tanh)
+        AddOPType(Atan)
+        AddOPType(Atanh)
+        AddOPType(SoftMax)
+        AddOPType(BiasAdd)
+        AddOPType(Add)
+        AddOPType(Sub)
+        AddOPType(EltwiseMult)
+        AddOPType(Div)
+        AddOPType(dwPow)
+        AddOPType(Pow)
+        AddOPType(LT)
+        AddOPType(LE)
+        AddOPType(GT)
+        AddOPType(GE)
+        AddOPType(ReLUBackward)
+        AddOPType(Dot)
+        AddOPType(RowMax)
+        AddOPType(GEMM)
+        AddOPType(GEMV)
+        AddOPType(Rand)
+        AddOPType(Axpy)
+        AddOPType(CrossEntropy)
+        AddOPType(SoftmaxCrossEntropy)
+        AddOPType(MultColumn)
+        AddOPType(MultRow)
+        AddOPType(Mult)
+        default: assert(0);
+    }
+#undef AddOPType
+    return "";
+}
 
 void* Block::mutable_data() {
   if (data_ == nullptr && size_ > 0) {

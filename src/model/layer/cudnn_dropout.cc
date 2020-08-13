@@ -70,7 +70,7 @@ const Tensor CudnnDropout::Forward(int flag, const Tensor& input) {
     if (!has_init_cudnn_) {
       input.device()->Exec([size, dtype, this, dev](Context* ctx) {
           this->InitCudnn(size, dtype, dev, ctx);
-          }, {}, {this->state_.block()});
+          }, kFwdDropout, {}, {this->state_.block()});
     } else {
       int n, c, h, w, s;
       cudnnDataType_t type;
@@ -79,7 +79,7 @@ const Tensor CudnnDropout::Forward(int flag, const Tensor& input) {
       if (size != static_cast<size_t>(w))
         input.device()->Exec([size, dtype, this, dev](Context* ctx) {
             this->InitCudnn(size, dtype, dev, ctx);
-            }, {}, {this->state_.block()});
+            }, kFwdDropout, {}, {this->state_.block()});
     }
     Tensor output;
     output.ResetLike(input);
@@ -90,7 +90,7 @@ const Tensor CudnnDropout::Forward(int flag, const Tensor& input) {
                           inblock->data(), this->y_desc_,
                           outblock->mutable_data(), mblock->mutable_data(),
                           this->reserve_size_);
-    }, {input.block()}, {output.block(), mask_.block()});
+    }, kFwdDropout, {input.block()}, {output.block(), mask_.block()});
     return output;
   } else {
     return input;
@@ -110,7 +110,7 @@ const std::pair<Tensor, vector<Tensor>> CudnnDropout::Backward(
                            dyblock->data(), this->x_desc_,
                            dxblock->mutable_data(), mblock->mutable_data(),
                            this->reserve_size_);
-    }, {grad.block(), mask_.block()}, {dx.block()});
+    }, kBwdDropout, {grad.block(), mask_.block()}, {dx.block()});
   } else {
     LOG(ERROR) << "Do not call backward for evaluation phase";
   }

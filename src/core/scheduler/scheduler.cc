@@ -314,19 +314,19 @@ void Graph::RunInSerial() {
   }
 }
 
-void Graph::AddOperation(OpFunc &&op, const BlockVec &read_blocks,
+void Graph::AddOperation(OpFunc &&op, OpType type, const BlockVec &read_blocks,
                          const BlockVec &write_blocks) {
   dirty_ = true;
 
   // if the size of both read_blocks and write_blocks is zero,
   // this operation is used for synchronization
   if (read_blocks.size() == 0 && write_blocks.size() == 0) {
-    AddSyncOp(std::move(op));
+    AddSyncOp(std::move(op), type);
     return;
   }
 
   // create new node
-  Node *node = new Node(nodes_.size(), std::move(op));
+  Node *node = new Node(nodes_.size(), std::move(op), type);
 
   // create edges for read_blocks
   for (size_t i = 0; i < read_blocks.size(); ++i) {
@@ -399,9 +399,9 @@ void Graph::AddOperation(OpFunc &&op, const BlockVec &read_blocks,
   nodes_.push_back(node);
 }
 
-void Graph::AddSyncOp(function<void(Context *)> &&op) {
+void Graph::AddSyncOp(function<void(Context *)> &&op, OpType type) {
   // create new node
-  Node *node = new Node(nodes_.size(), std::move(op));
+  Node *node = new Node(nodes_.size(), std::move(op), type);
 
   for (size_t i = 0; i < write_blocks_.size(); ++i) {
     Block *blk = write_blocks_[i];
@@ -606,6 +606,7 @@ void Graph::Draw() {
     for (size_t i=0; i<nodes_.size(); ++i) {
         fout << "op_" + std::to_string(nodes_[i]->id_) << " [shape=record, fillcolor=gold2, style=\"filled, rounded\", label=\"{"
              << "op_" + std::to_string(nodes_[i]->id_)
+             << "| type: " << to_string(nodes_[i]->type_)
              << "| time: " << nodes_[i]->est_time_ << "us"
              << "}\"];"<< std::endl;
     }
@@ -632,6 +633,16 @@ void Graph::Draw() {
         }
     }
     fout << "}" << std::endl;
+
+    // convert to svg files
+    std::string cmd = "dot -Tsvg " + file_name + " -O log/";
+    const char *sysCommand = cmd.data();
+    FILE *fp;
+    if (!(fp = popen(sysCommand, "r"))) {
+        std::cout << "generate svg file failed." << std::endl;
+        return;
+    }
+    pclose(fp);
 }
 
 /*

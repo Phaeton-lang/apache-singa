@@ -51,7 +51,8 @@ enum BlockType { kUnknow, kInput, kParam, kInter, kEnd };
 
 class Node {
  public:
-  Node(int id, OpFunc &&op) : id_(id), op_(std::move(op)), est_time_(0.) {}
+  Node(int id, OpFunc &&op, OpType type)
+    : id_(id), op_(std::move(op)), type_(type), est_time_(0.) {}
 
   void AddInEdge(Edge *in_edge);
   void AddOutEdge(Edge *out_edge);
@@ -70,6 +71,7 @@ class Node {
   OpFunc op_;
   EdgeVec in_edges_;
   EdgeVec out_edges_;
+  OpType type_;
   double est_time_=0.;  // us
 };
 
@@ -138,7 +140,7 @@ class Graph {
   void Debug();
   void RunGraph();
   void RunInSerial();
-  void AddOperation(OpFunc &&op, const BlockVec &read_blocks,
+  void AddOperation(OpFunc &&op, OpType type, const BlockVec &read_blocks,
                     const BlockVec &write_blocks);
 
   // getters of Graph
@@ -168,7 +170,7 @@ class Graph {
   void FreeLoop();
   void AnalyzeNodes();
   void AnalyzeEdges();
-  void AddSyncOp(function<void(Context *)> &&op);
+  void AddSyncOp(function<void(Context *)> &&op, OpType type);
   void Draw();
 
   // static void CUDART_CB Callback(cudaStream_t stream, cudaError_t status,
@@ -193,6 +195,8 @@ class Graph {
   std::vector<BlockVec> free_blocks_;
 
   SafeQueue<int> free_queue_;
+
+  // used for memory optimization
 };
 
 /// Scheduling Tensor operations with dependency detection.

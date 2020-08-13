@@ -112,7 +112,7 @@ Tensor CpuPoolingForward(const PoolingHandle &ph, const Tensor &x) {
                                         {DNNL_ARG_WORKSPACE, ph.ws_mem}});
         ctx->dnnl_stream.wait();
       },
-      {x.block()}, {y.block()});
+      OpType::kFwdPool, {x.block()}, {y.block()});
 
   return y;
 }
@@ -139,7 +139,7 @@ Tensor CpuPoolingBackward(const PoolingHandle &ph, const Tensor &grad,
                                         {DNNL_ARG_WORKSPACE, ph.ws_mem}});
         ctx->dnnl_stream.wait();
       },
-      {x.block(), y.block(), grad.block()}, {in_grad.block()});
+      OpType::kBwdPool, {x.block(), y.block(), grad.block()}, {in_grad.block()});
 
   return in_grad;
 }
@@ -199,7 +199,7 @@ Tensor GpuPoolingForward(const CudnnPoolingHandle &cph, const Tensor &x) {
                             cph.x_desc, x.block()->data(), &beta, cph.y_desc,
                             output.block()->mutable_data());
       },
-      {x.block()}, {output.block()});
+      OpType::kFwdPool, {x.block()}, {output.block()});
 
   return output;
 }
@@ -220,7 +220,7 @@ Tensor GpuPoolingBackward(const CudnnPoolingHandle &cph, const Tensor &dy,
                              dy.block()->data(), cph.x_desc, x.block()->data(),
                              &beta, cph.x_desc, dx.block()->mutable_data());
       },
-      {dy.block(), y.block(), x.block()}, {dx.block()});
+      OpType::kBwdPool, {dy.block(), y.block(), x.block()}, {dx.block()});
 
   return dx;
 };

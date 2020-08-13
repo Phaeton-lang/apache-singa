@@ -104,7 +104,7 @@ const Tensor CudnnPooling::Forward(int flag, const Tensor &input) {
     cudnnPoolingForward(ctx->cudnn_handle, this->pool_desc_, &alpha,
                         this->x_desc_, inblock->data(), &beta, this->y_desc_,
                         outblock->mutable_data());
-  }, {input.block()}, {output.block()});
+  }, OpType::kFwdPool, {input.block()}, {output.block()});
   if (flag & kTrain) {
     buf_.push(input);
     buf_.push(output);
@@ -133,7 +133,7 @@ const std::pair<Tensor, vector<Tensor>> CudnnPooling::Backward(
                          this->y_desc_, yblock->data(), this->y_desc_,
                          dyblock->data(), this->x_desc_, xblock->data(), &beta,
                          this->x_desc_, dxblock->mutable_data());
-  }, {grad.block(), y.block(), x.block()}, {dx.block()});
+  }, OpType::kBwdPool, {grad.block(), y.block(), x.block()}, {dx.block()});
 
   return std::make_pair(dx, param_grad);
 }
