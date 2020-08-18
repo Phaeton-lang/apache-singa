@@ -76,6 +76,9 @@ class Device {
 
   static void EnableLazyAlloc(bool enbale) { lazy_alloc_ = enbale; }
 
+  void EstimateGraphNodeTime();
+  void EstimateBlockSwapTime();
+
   /// Called by Tensor.
   Block* NewBlock(int size);
 
@@ -98,7 +101,8 @@ class Device {
                            size_t dst_offset = 0);
   /// Submit the operation to the device, which may execute it right now or
   /// delay it depending on the scheduler.
-  void Exec(function<void(Context*)>&& fn, const vector<Block*> read_blocks,
+  void Exec(function<void(Context*)>&& fn, OpType type,
+            const vector<Block*> read_blocks,
             const vector<Block*> write_blocks, bool use_rand_generator = false);
 
   void RunGraph(bool serial = false);

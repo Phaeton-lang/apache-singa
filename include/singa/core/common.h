@@ -48,6 +48,86 @@ using std::atomic;
 
 namespace singa {
 
+enum OpType {
+    kUndefined,
+    kCopyH2H,
+    kCopyH2D,
+    kCopyD2H,
+    kCopyD2D,
+    kSync,
+    kFwdPool,
+    kBwdPool,
+    kFwdBN,
+    kBwdBN,
+    kFwdRNN,
+    kBwdRNN,
+    kFwdActivation,
+    kBwdActivation,
+    kFwdDropout,
+    kBwdDropout,
+    kFwdConv,
+    kBwdConvBias,
+    kBwdConvWeight,
+    kBwdConvNeuron,
+    kFwdSoftmax,
+    kBwdSoftmax,
+    kFwdLrn,
+    kBwdLrn,
+    kCastType,
+    kL1,
+    kL2,
+    kAbs,
+    kCeil,
+    kExp,
+    kLog,
+    kReLU,
+    kSigmoid,
+    kSoftPlus,
+    kSoftSign,
+    kSign,
+    kSqrt,
+    kSquare,
+    kTransform,
+    kCos,
+    kCosh,
+    kAcos,
+    kAcosh,
+    kSin,
+    kSinh,
+    kAsin,
+    kAsinh,
+    kTan,
+    kTanh,
+    kAtan,
+    kAtanh,
+    kSoftMax,
+    kBiasAdd,
+    kAdd,
+    kSub,
+    kEltwiseMult,
+    kDiv,
+    kdwPow,
+    kPow,
+    kLT,
+    kLE,
+    kGT,
+    kGE,
+    kReLUBackward,
+    kDot,
+    kRowMax,
+    kGEMM,
+    kGEMV,
+    kRand,
+    kAxpy,
+    kCrossEntropy,
+    kSoftmaxCrossEntropy,
+    kMultColumn,
+    kMultRow,
+    kMult,
+};
+
+std::string to_string(OpType type);
+
 namespace lang {
 /// To implemente functions using cpp libraries
 typedef struct _Cpp {
@@ -86,6 +166,11 @@ class Block {
 
   bool initialized() const { return initialized_; }
 
+  void SetEstSwapOutTime(double time) { est_swap_out_time_ = time; }
+  void SetEstSwapInTime(double time) { est_swap_in_time_ = time; }
+  double GetEstSwapOutTime() { return est_swap_out_time_; }
+  double GetEstSwapInTime() { return est_swap_in_time_; }
+
  private:
   Block() {}
   void* data_ = nullptr;
@@ -96,6 +181,8 @@ class Block {
   // Disabled as it is not used currently.
   // std::shared_ptr<std::atomic<int>> ref_count_ = nullptr;
   std::atomic<int> ref_count_;
+  double est_swap_out_time_ = 0.;  // us
+  double est_swap_in_time_ = 0.;  // us
 };
 
 /// For append purpose in the device class.

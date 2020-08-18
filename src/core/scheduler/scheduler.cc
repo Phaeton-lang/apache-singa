@@ -24,11 +24,27 @@
 #include <sstream>
 #include <thread>
 #include <unordered_set>
+#include <iostream>
+#include <fstream>
+#include <ctime>
+#include <sys/stat.h>
+#include <cassert>
 
 #include "singa/core/device.h"
 #include "singa/utils/safe_queue.h"
 
 namespace singa {
+
+std::string to_string(const BlockType &bt) {
+    switch (bt) {
+        case BlockType::kInput: return "Input";
+        case BlockType::kParam: return "Param";
+        case BlockType::kInter: return "Inter";
+        case BlockType::kEnd:   return "End";
+        default: ;
+    }
+    return "Unknown";
+}
 
 void Node::AddInEdge(Edge *in_edge) { in_edges_.push_back(in_edge); }
 
@@ -188,7 +204,7 @@ void Graph::Debug() {
 
   for (auto it : blkInfos) {
     auto blkInfo = it;
-    ss << "Block[" << std::setw(w) << blkInfo->id_ << "] addr[" << std::setw(w)
+    ss << "Block[" << std::setw(w) << blkInfo->id_ << "] addr[" << std::setw(10)
        << blkInfo->blk_ << "] size[" << std::setw(10) << blkInfo->blk_->size()
        << "] graph_ref[" << std::setw(w) << blkInfo->graph_ref_
        << "] ref_count[" << std::setw(w) << blkInfo->blk_->ref_count() << "] ";
@@ -231,6 +247,11 @@ void Graph::Debug() {
 void Graph::RunGraph() {
   in_serial_ = false;
   if (dirty_) Analyze();
+
+  device_->EstimateGraphNodeTime();
+  device_->EstimateBlockSwapTime();
+
+  Draw();
 
   SafeQueue<Node *> node_queue;
 
@@ -293,19 +314,19 @@ void Graph::RunInSerial() {
   }
 }
 
-void Graph::AddOperation(OpFunc &&op, const BlockVec &read_blocks,
+void Graph::AddOperation(OpFunc &&op, OpType type, const BlockVec &read_blocks,
                          const BlockVec &write_blocks) {
   dirty_ = true;
 
   // if the size of both read_blocks and write_blocks is zero,
   // this operation is used for synchronization
   if (read_blocks.size() == 0 && write_blocks.size() == 0) {
-    AddSyncOp(std::move(op));
+    AddSyncOp(std::move(op), type);
     return;
   }
 
   // create new node
-  Node *node = new Node(nodes_.size(), std::move(op));
+  Node *node = new Node(nodes_.size(), std::move(op), type);
 
   // create edges for read_blocks
   for (size_t i = 0; i < read_blocks.size(); ++i) {
@@ -378,9 +399,9 @@ void Graph::AddOperation(OpFunc &&op, const BlockVec &read_blocks,
   nodes_.push_back(node);
 }
 
-void Graph::AddSyncOp(function<void(Context *)> &&op) {
+void Graph::AddSyncOp(function<void(Context *)> &&op, OpType type) {
   // create new node
-  Node *node = new Node(nodes_.size(), std::move(op));
+  Node *node = new Node(nodes_.size(), std::move(op), type);
 
   for (size_t i = 0; i < write_blocks_.size(); ++i) {
     Block *blk = write_blocks_[i];
@@ -556,6 +577,72 @@ void Graph::FreeLoop() {
       }
     }
   }
+}
+
+void Graph::Draw() {
+    // filename: year_month_day_hour_min_second.dot
+    std::string dir = "log/";
+    if (access(dir.c_str(), F_OK) != 0) {
+        mkdir(dir.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRWXG | S_IRWXO);
+    }
+
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    std::stringstream ss;
+    ss << dir << std::setw(4) << std::setfill('0') << ltm->tm_year + 1900
+       << "_" << std::setw(2) << std::setfill('0') << ltm->tm_mon
+       << "_" << std::setw(2) << std::setfill('0') << ltm->tm_hour
+       << "_" << std::setw(2) << std::setfill('0') << ltm->tm_min
+       << "_" << std::setw(2) << std::setfill('0') << ltm->tm_sec
+       << "_" << std::setw(6) << std::setfill('0')  << std::to_string(clock()) << ".dot";
+    std::string file_name = ss.str();
+
+    std::ofstream fout(file_name.c_str());
+    fout << "digraph {" << std::endl;
+    fout << "fontname = \"Courier New\"" << std::endl;
+    fout << "fontsize = 8" << std::endl;
+
+    // operators
+    for (size_t i=0; i<nodes_.size(); ++i) {
+        fout << "op_" + std::to_string(nodes_[i]->id_) << " [shape=record, fillcolor=gold2, style=\"filled, rounded\", label=\"{"
+             << "op_" + std::to_string(nodes_[i]->id_)
+             << "| type: " << to_string(nodes_[i]->type_)
+             << "| time: " << nodes_[i]->est_time_ << "us"
+             << "}\"];"<< std::endl;
+    }
+    // blocks
+    for (auto blk_info : blocks_) {
+        Block *block = blk_info.first;
+        BlkInfo *info = blk_info.second;
+        fout << "blk_" << info->id_ << " [shape=record, fillcolor=aquamarine2, style=\"filled\", label=\"{"
+             << "blk_" << info->id_
+             << "| size: " << block->size()
+             << "| type: " << to_string(info->type())
+             << "| swapin: " << block->GetEstSwapInTime()
+             << "| swapout: " << block->GetEstSwapOutTime()
+             << " }\"];" << std::endl;
+    }
+    // edges
+    for (auto edge : edges_) {
+        assert (edge->blk_ && blocks_[edge->blk_]);
+        if (edge->src_node_) {
+            fout << "op_" << std::to_string(edge->src_node_->id_) << " -> blk_" << blocks_[edge->blk_]->id_ << ";" << std::endl;
+        }
+        if (edge->dst_node_) {
+            fout << "blk_" << blocks_[edge->blk_]->id_ << " -> op_" << std::to_string(edge->dst_node_->id_) << ";" << std::endl;
+        }
+    }
+    fout << "}" << std::endl;
+
+    // convert to svg files
+    std::string cmd = "dot -Tsvg " + file_name + " -O log/";
+    const char *sysCommand = cmd.data();
+    FILE *fp;
+    if (!(fp = popen(sysCommand, "r"))) {
+        std::cout << "generate svg file failed." << std::endl;
+        return;
+    }
+    pclose(fp);
 }
 
 /*

@@ -197,7 +197,7 @@ const Tensor CudnnConvolution::Forward(int flag, const Tensor &input) {
                             this->workspace_.block()->mutable_data(),
                             this->workspace_count_ * sizeof(float), &beta,
                             this->y_desc_, outblock->mutable_data());
-  }, {input.block(), weight_.block()}, {output.block()}, workspace_.block());
+  }, OpType::kFwdConv, {input.block(), weight_.block()}, {output.block()}, workspace_.block());
 
   if (bias_term_) {
     output.device()->Exec([output, this](Context * ctx) {
@@ -206,7 +206,7 @@ const Tensor CudnnConvolution::Forward(int flag, const Tensor &input) {
       cudnnAddTensor(ctx->cudnn_handle, &alpha, this->bias_desc_,
                      bblock->data(), &beta, this->y_desc_,
                      outblock->mutable_data());
-    }, {output.block(), bias_.block()}, {output.block()});
+    }, OpType::kBiasAdd, {output.block(), bias_.block()}, {output.block()});
   }
   return output;
 }
@@ -234,7 +234,7 @@ int flag, const Tensor &grad) {
       cudnnConvolutionBackwardBias(ctx->cudnn_handle, &alpha, this->y_desc_,
                                    dyblock->data(), &beta, this->bias_desc_,
                                    dbblock->mutable_data());
-    }, {grad.block()}, {db.block()});
+    }, OpType::kBwdConvBias, {grad.block()}, {db.block()});
   }
   // LOG(ERROR) << "backward w";
   dx.device()->Exec([grad, dw, src_data, this](Context * ctx) {
@@ -247,7 +247,7 @@ int flag, const Tensor &grad) {
       this->workspace_.block()->mutable_data(),
       this->workspace_count_ * sizeof(float), &beta, this->filter_desc_,
       dwblock->mutable_data());
-  }, {grad.block(), src_data.block()}, {dw.block(), workspace_.block()});
+  }, OpType::kBwdConvWeight, {grad.block(), src_data.block()}, {dw.block(), workspace_.block()});
 
   // LOG(ERROR) << "backward src";
   dx.device()->Exec([dx, grad, this](Context * ctx) {
@@ -260,7 +260,7 @@ int flag, const Tensor &grad) {
                                  this->workspace_.block()->mutable_data(),
                                  this->workspace_count_ * sizeof(float), &beta,
                                  this->x_desc_, dxblock->mutable_data());
-  }, {grad.block(), weight_.block()}, {dx.block(), workspace_.block()});
+  }, OpType::kBwdConvNeuron, {grad.block(), weight_.block()}, {dx.block(), workspace_.block()});
   param_grad.push_back(dw);
   if (bias_term_)
     param_grad.push_back(db);

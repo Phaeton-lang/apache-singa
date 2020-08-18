@@ -73,7 +73,7 @@ const Tensor CudnnLRN::Forward(int flag, const Tensor& input) {
         ctx->cudnn_handle, this->lrn_desc_, this->mode_, &alpha,
         this->shape_desc_, inblock->data(), &beta, this->shape_desc_,
         outblock->mutable_data()));
-  }, {input.block()}, {output.block()});
+  }, OpType::kFwdLrn, {input.block()}, {output.block()});
 
   if (flag & kTrain) {
     buf_.push(input);
@@ -102,7 +102,7 @@ const std::pair<Tensor, vector<Tensor>> CudnnLRN::Backward(int flag,
           this->shape_desc_, yblock->data(), this->shape_desc_, dyblock->data(),
           this->shape_desc_, xblock->data(), &beta, this->shape_desc_,
           dxblock->mutable_data()));
-    }, {output.block(), grad.block(), input.block()}, {dx.block()});
+    }, OpType::kBwdLrn, {output.block(), grad.block(), input.block()}, {dx.block()});
   } else {
     LOG(ERROR) << "Do not call backward for evaluation phase";
   }

@@ -113,7 +113,7 @@ Tensor CpuBatchNormForwardInference(const BatchNormHandle& bnh, const Tensor& x,
                                {DNNL_ARG_MEAN, m_mem},
                                {DNNL_ARG_VARIANCE, v_mem}});
         ctx->dnnl_stream.wait();
-      },
+      }, OpType::kFwdBN,
       {x.block(), w.block(), running_mean.block(), running_var.block()},
       {y.block(), running_mean.block(), running_var.block()});
 
@@ -170,7 +170,7 @@ const std::vector<Tensor> CpuBatchNormForwardTraining(
         running_mean = running_mean * (1 - bnh.factor) + mean * bnh.factor;
         running_var =
             running_var * (1 - bnh.factor) + var * (p / (p - 1)) * bnh.factor;
-      },
+      }, OpType::kFwdBN,
       {x.block(), w.block(), running_mean.block(), running_var.block()},
       {y.block(), running_mean.block(), running_var.block(), mean.block(),
        var.block()});
@@ -236,7 +236,7 @@ const std::vector<Tensor> CpuBatchNormBackwardx(
                                {DNNL_ARG_DIFF_SCALE_SHIFT, dw_mem},
                                {DNNL_ARG_SCALE_SHIFT, w_mem}});
         ctx->dnnl_stream.wait();
-      },
+      }, OpType::kBwdBN,
       {x.block(), dy.block(), mean.block(), var.block(), w.block(), y.block()},
       {dx.block(), dw.block()});
 
@@ -320,6 +320,7 @@ const std::vector<Tensor> GpuBatchNormForwardTraining(
             running_var.block()->mutable_data(), epsilon,
             mean.block()->mutable_data(), var.block()->mutable_data()));
       },
+      OpType::kFwdBN,
       {input.block(), bnScale.block(), bnBias.block(), running_mean.block(),
        running_var.block()},
       {output.block(), running_mean.block(), running_var.block(), mean.block(),
@@ -359,6 +360,7 @@ Tensor GpuBatchNormForwardInference(const CudnnBatchNormHandle& cbnh,
             running_mean.block()->data(), running_var.block()->data(),
             epsilon));
       },
+      OpType::kFwdBN,
       {input.block(), bnScale.block(), bnBias.block(), running_mean.block(),
        running_var.block()},
       {output.block()});
@@ -395,6 +397,7 @@ const std::vector<Tensor> GpuBatchNormBackward(
             dbnScale.block()->mutable_data(), dbnBias.block()->mutable_data(),
             epsilon, mean.block()->data(), var.block()->data()));
       },
+      OpType::kBwdBN,
       {x.block(), dy.block(), bnScale.block(), mean.block(), var.block()},
       {dx.block(), dbnScale.block(), dbnBias.block()});
 

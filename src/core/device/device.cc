@@ -16,10 +16,13 @@
  * limitations under the License.
  */
 
+#include <cassert>
 #include "singa/core/device.h"
 
 namespace singa {
 
+const int WARMUP_TIMES = 8;
+const int REPEAT_TIMES = 32;
 bool Device::lazy_alloc_ = true;
 
 Device::Device(int id, int num_executors)
@@ -42,11 +45,55 @@ Device::~Device() {
   }
 }
 
+void Device::EstimateGraphNodeTime() {
+   for (auto &&node : graph_->nodes()) {
+       double time = 0;
+       clock_t start = 0, end = 0;
+       for (int i=0; i<REPEAT_TIMES+WARMUP_TIMES; ++i) {
+           if (i == WARMUP_TIMES) { start = clock(); }
+           DoExec(std::move(node->op()), 0);
+       }
+       end = clock();
+       time = (double)(end-start)*1e6/REPEAT_TIMES/CLOCKS_PER_SEC;
+       node->SetEstimeTime(time);
+   }
+}
+
+void Device::EstimateBlockSwapTime() {
+    for (auto &&blk_info : graph_->blocks()) {
+        auto blk = blk_info.first;
+        double time = 0;
+        clock_t start = 0, end = 0;
+        for (int i=0; i<REPEAT_TIMES+WARMUP_TIMES; ++i) {
+            if (i == WARMUP_TIMES) { start = clock(); }
+            // TODO:
+        }
+        end = clock();
+        // unit: us
+        time = (double)(end-start)*1e6/REPEAT_TIMES/CLOCKS_PER_SEC;
+        blk->SetEstSwapInTime(time);
+    }
+    for (auto &&blk_info : graph_->blocks()) {
+        auto blk = blk_info.first;
+        double time = 0;
+        clock_t start = 0, end = 0;
+        for (int i=0; i<REPEAT_TIMES+WARMUP_TIMES; ++i) {
+            if (i == WARMUP_TIMES) { start = clock(); }
+            // TODO:
+        }
+        end = clock();
+        // unit: us
+        time = (double)(end-start)*1e6/REPEAT_TIMES/CLOCKS_PER_SEC;
+        blk->SetEstSwapOutTime(time);
+    }
+}
+
 void Device::Exec(function<void(Context*)>&& fn,
+                  OpType type,
                   const vector<Block*> read_blocks,
                   const vector<Block*> write_blocks, bool use_rand_generator) {
   if (graph_enabled_ == true) {
-    graph_->AddOperation(std::move(fn), read_blocks, write_blocks);
+    graph_->AddOperation(std::move(fn), type, read_blocks, write_blocks);
   } else {
     // printf("immediately ops\n");
     DoExec(std::move(fn), 0);
@@ -118,26 +165,40 @@ void Device::FreeBlock(Block* block) {
 
 void* Device::UpdateGpuPtrInfo(const Block* blk) { return UpdateGpuPtr(blk); }
 
+OpType CopyDirectionToOpType(CopyDirection direct) {
+    OpType type;
+    switch (direct) {
+        case CopyDirection::kHostToHost: type = OpType::kCopyH2H; break;
+        case CopyDirection::kHostToDevice: type = OpType::kCopyH2D; break;
+        case CopyDirection::kDeviceToHost: type = OpType::kCopyD2H; break;
+        case CopyDirection::kDeviceToDevice: type = OpType::kCopyD2D; break;
+        default: assert(0);
+    }
+    return type;
+}
+
 void Device::CopyDataToFrom(Block* dst, Block* src, size_t nBytes,
                             CopyDirection direct, int dst_offset,
                             int src_offset) {
+  OpType type = CopyDirectionToOpType(direct);
   this->Exec(
       [this, dst, src, nBytes, direct, dst_offset, src_offset](Context* ctx) {
         this->CopyToFrom(
             reinterpret_cast<char*>(dst->mutable_data()) + dst_offset,
             reinterpret_cast<const char*>(src->data()) + src_offset, nBytes,
             direct, ctx);
-      },
+      }, type,
       {src}, {dst});
 }
 
 void Device::CopyDataFromHostPtr(Block* dst, const void* src, size_t nBytes,
                                  size_t dst_offset) {
   auto direct = lang_ == kCpp ? kHostToHost : kHostToDevice;
+  OpType type = CopyDirectionToOpType(direct);
   void* dstptr = reinterpret_cast<char*>(dst->mutable_data()) + dst_offset;
   Exec([this, dstptr, src, nBytes,
         direct](Context* ctx) { CopyToFrom(dstptr, src, nBytes, direct, ctx); },
-       {}, {dst});
+       type, {}, {dst});
 }
 void Device::Sync() {}
 }  // namespace singa

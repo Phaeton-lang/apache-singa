@@ -137,7 +137,7 @@ void CudaGPU::Free(void* ptr) {
 
 void CudaGPU::Sync() {
   Exec([this](Context* ctx) { CUDA_CHECK(cudaStreamSynchronize(ctx_.stream)); },
-       {}, {});
+       OpType::kSync, {}, {});
 }
 
 }  // namespace singa

@@ -1278,7 +1278,7 @@ void SwapCudaGPU::SwapInSynchronous(const Block* block_ptr) {
 
 void SwapCudaGPU::Sync() {
   Exec([this](Context* ctx) { CUDA_CHECK(cudaStreamSynchronize(ctx_.stream)); },
-       {}, {});
+       OpType::kSync, {}, {});
 }
 
 }  // namespace singa
