@@ -46,22 +46,22 @@ CudaGPU::~CudaGPU() {
 }
 const int kNumCudaStream = 1;
 
-CudaGPU::CudaGPU(int id) : Device(id, kNumCudaStream) {
+CudaGPU::CudaGPU(int id) : Device(DT_CudaGPU, id, kNumCudaStream) {
   MemPoolConf conf;
   conf.add_device(id);
-  // TODO: replace this pool with swap in/out support.
   pool_ = std::make_shared<CnMemPool>(conf);
   Setup();
 }
 
 CudaGPU::CudaGPU(int id, std::shared_ptr<DeviceMemPool> pool)
-    : Device(id, kNumCudaStream) {
+    : Device(DT_CudaGPU, id, kNumCudaStream) {
   CHECK(pool != nullptr);
   pool_ = pool;
   Setup();
 }
 
 void CudaGPU::Setup() {
+  device_type_ = DT_CudaGPU;
   lang_ = kCuda;
   ctx_.stream = NULL;  // use the default sync stream
 
@@ -94,7 +94,9 @@ void CudaGPU::SetRandSeed(unsigned seed) {
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(ctx_.curand_generator, seed));
 }
 
-void CudaGPU::DoExec(function<void(Context*)>&& fn, int executor) { fn(&ctx_); }
+void CudaGPU::DoExec(function<void(Context*)>&& fn, int executor) {
+  fn(&ctx_);
+}
 
 void CudaGPU::CopyToFrom(void* dst, const void* src, size_t nBytes,
                          CopyDirection direction, Context* ctx) {
@@ -122,6 +124,8 @@ void* CudaGPU::Malloc(int size) {
   }
   return ptr;
 }
+
+void* CudaGPU::UpdateGpuPtr(const Block* block) { return nullptr; }
 
 /// Free gpu memory.
 void CudaGPU::Free(void* ptr) {

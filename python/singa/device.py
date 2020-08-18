@@ -139,22 +139,22 @@ def create_cuda_gpu_on(device_id, set_default=True):
     return devices[0]
 
 def create_swap_cuda_gpus(num):
-    '''Create a list of CudaGPU devices.
+    '''Create a list of SwapCudaGPU devices.
 
     Args:
         num (int): number of device to create.
     Returns:
-        a list of swig converted CudaGPU devices.
+        a list of swig converted SwapCudaGPU devices.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
     return singa.Platform.CreateSwapCudaGPUs(num)
 
 
 def create_swap_cuda_gpu(set_default=True):
-    '''Create a single CudaGPU device.
+    '''Create a single SwapCudaGPU device.
 
     Returns:
-        a swig converted CudaGPU device.
+        a swig converted SwapCudaGPU device.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
     devices = singa.Platform.CreateSwapCudaGPUs(1)
@@ -164,26 +164,26 @@ def create_swap_cuda_gpu(set_default=True):
 
 
 def create_swap_cuda_gpus_on(device_ids):
-    '''Create a list of CudaGPU devices.
+    '''Create a list of SwapCudaGPU devices.
 
     Args:
         device_ids (list): a list of GPU card IDs.
 
     Returns:
-        a list of swig converted CudaGPU devices.
+        a list of swig converted SwapCudaGPU devices.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
     return singa.Platform.CreateSwapCudaGPUsOn(device_ids)
 
 
 def create_swap_cuda_gpu_on(device_id, set_default=True):
-    '''Create a CudaGPU device on the given device ID.
+    '''Create a SwapCudaGPU device on the given device ID.
 
     Args:
         device_id (int): GPU card ID.
 
     Returns:
-        a swig converted CudaGPU device.
+        a swig converted SwapCudaGPU device.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
     devices = create_swap_cuda_gpus_on([device_id])

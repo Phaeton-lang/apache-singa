@@ -168,7 +168,8 @@ const vector<shared_ptr<Device>> Platform::CreateSwapCudaGPUsOn(
     int count = Platform::GetNumGPUs();
     for (int i = 0; i < count; i++) UsedDevice.push_back(nullptr);
   }
-  auto pool = std::make_shared<CnMemPool>(conf);
+  // Update the memory pool from CnMemPool to SwapPool.
+  auto pool = std::make_shared<SwapPool>(conf);
   vector<shared_ptr<Device>> ret;
   for (size_t i = 0; i < devices.size(); i++) {
     if (UsedDevice[devices[i]] == nullptr) {

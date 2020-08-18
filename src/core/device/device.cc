@@ -29,6 +29,13 @@ Device::Device(int id, int num_executors)
   graph_ = new Graph(this);
 }
 
+Device::Device(DeviceType dt, int id, int num_executors)
+    : device_type_(dt), id_(id), num_executors_(num_executors) {
+  // TODO(wangwei) create scheduler and vm.
+  host_ = defaultDevice;
+  graph_ = new Graph(this);
+}
+
 Device::~Device() {
   if (graph_) {
     delete graph_;
@@ -58,7 +65,7 @@ void Device::RunGraph(bool serial) {
     graph_->RunGraph();
   }
 
-  graph_->Debug();
+  //graph_->Debug();
 
   graph_enabled_ = previous_state;
 }
@@ -70,11 +77,22 @@ Block* Device::NewBlock(int size) {
       << "from size_t to int. In that case, the size is too large.";
   if (size > 0) {
     void* ptr = nullptr;
+    // NOTICE: Singa supports lazy allocation. That means when tensor or blocks
+    // are created, devices do not allocate memory for them immediately.
+    // Instead, when the block is accessed for the first time, the memory is
+    // allocated. More details, see <http://singa.apache.org/docs/graph/>.
+    // If we want to trace the malloc/free sequence, we MUST disable lazy
+    // allocation.
+    if (device_type_ == DT_SwapCudaGPU) {
+      lazy_alloc_ = false;
+    }
     if (!lazy_alloc_) {
       ptr = Malloc(size);
     }
-
-    return new Block(ptr, size, this);
+    Block* blk = new Block(ptr, size, this);
+    // Make table and append vec_block.
+    AppendAfterMalloc(blk, ptr, size);
+    return blk;
   } else {
     return nullptr;
   }
@@ -83,10 +101,22 @@ Block* Device::NewBlock(int size) {
 // TODO(wangwei) return Block to the memory manager
 void Device::FreeBlock(Block* block) {
   if (block != nullptr) {
-    Free(block->mutable_data());
+    // Free(block->mutable_data());
+    auto tmp_ptr = block->mutable_data();
+    Free(tmp_ptr);
+    // Instrument block info for free operation.
+    std::stringstream ss;
+    ss << block;
+    std::string tmp_str = ss.str();
+    DeviceOptInfoToAppend info("Free", tmp_str, block->size());
+    auto t = (std::chrono::system_clock::now()).time_since_epoch().count();
+    info.time_stamp = t;
+    Append(info);
     delete block;
   }
 }
+
+void* Device::UpdateGpuPtrInfo(const Block* blk) { return UpdateGpuPtr(blk); }
 
 void Device::CopyDataToFrom(Block* dst, Block* src, size_t nBytes,
                             CopyDirection direct, int dst_offset,

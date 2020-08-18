@@ -23,6 +23,7 @@ namespace singa {
 std::shared_ptr<Device> defaultDevice = std::make_shared<CppCPU>();
 
 CppCPU::CppCPU() : Device(-1, 1) {
+  device_type_ = DT_CppCPU;
   lang_ = kCpp;
 #ifdef USE_DNNL
   ctx_.dnnl_engine = dnnl::engine(dnnl::engine::kind::cpu, 0);

@@ -22,6 +22,7 @@
 #include <chrono>
 #include <memory>
 #include <random>
+#include <string>
 
 #include "singa/singa_config.h"
 #include "singa/utils/logging.h"
@@ -55,11 +56,10 @@ typedef struct _Cpp {
 typedef struct _Cuda {
 } Cuda;
 /// To implement function using opencl libraries
-typedef struct _Opencl {
-} Opencl;
-}  // namespace lang
+typedef struct _Opencl { } Opencl; }  // namespace lang
 
 class Device;
+struct DeviceOptInfoToAppend;
 /// Block represent a chunk of memory (on device or host).
 class Block {
  public:
@@ -73,6 +73,8 @@ class Block {
   void* mutable_data();
   const void* data() const;
   void free_data();
+  void* get_data();
+  void update_data(void* new_data);
 
   size_t size() const { return size_; }
   size_t offset() const { return offset_; }
@@ -94,6 +96,18 @@ class Block {
   // Disabled as it is not used currently.
   // std::shared_ptr<std::atomic<int>> ref_count_ = nullptr;
   std::atomic<int> ref_count_;
+};
+
+/// For append purpose in the device class.
+struct DeviceOptInfoToAppend {
+  std::string mem_op_type;
+  std::string block_ptr;
+  int size;
+  long time_stamp =
+      (std::chrono::system_clock::now()).time_since_epoch().count();
+
+  DeviceOptInfoToAppend(std::string op_type, std::string ptr, int s)
+      : mem_op_type(op_type), block_ptr(ptr), size(s) {}
 };
 
 typedef struct _Context {

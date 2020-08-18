@@ -22,18 +22,69 @@
 
 namespace singa {
 
+// TODO: Update mutable_data for swapping support.
 void* Block::mutable_data() {
-  if (data_ == nullptr && size_ > 0) {
-    data_ = device_->Malloc((int)size_);
-  }
   initialized_ = true;
+
+  // Instrument block info: opt_type, ptr and time_stamp.
+  if (device_ != nullptr && device_->device_type_ == DT_SwapCudaGPU) {
+    std::stringstream ss;
+    ss << this;
+    std::string tmp_str = ss.str();
+    DeviceOptInfoToAppend info("Mutable", tmp_str, size());
+    auto t = (std::chrono::system_clock::now()).time_since_epoch().count();
+    info.time_stamp = t;
+    // std::cout << "==> " << __func__ << ": " << __FILE__ << ":" << __LINE__
+    //          << std::endl;
+    device_->Append(info);
+  }
+
+  // We need to update ptr after swap-in is done, if variable is not swapped
+  // back yet as expected.
+  if (data_ == nullptr && size_ > 0) {
+    if (device_->device_type_ != DT_SwapCudaGPU) {
+      data_ = device_->Malloc((int)size_);
+    }
+    if (device_->device_type_ == DT_SwapCudaGPU) {
+      // std::cout << "==> " << __func__ << ": " << __FILE__ << ":" << __LINE__
+      //          << std::endl;
+      auto tmp_data_ = device_->UpdateGpuPtrInfo(this);
+      return static_cast<char*>(tmp_data_) + offset_;
+    }
+  }
+  // Original case.
   return static_cast<char*>(data_) + offset_;
 }
 
 const void* Block::data() const {
   CHECK(initialized_) << "Must initialize data before reading it";
+
+  // Instrument block info: opt_type, ptr, time_stamp.
+  if (device_ != nullptr) {
+    std::stringstream ss;
+    ss << this;
+    std::string tmp_str = ss.str();
+    DeviceOptInfoToAppend info("Read", tmp_str, size());
+    auto t = (std::chrono::system_clock::now()).time_since_epoch().count();
+    info.time_stamp = t;
+    device_->Append(info);
+  }
+
+  // We need to update ptr after swap-in is done, if variable is not swapped
+  // back yet as expected.
+  if (data_ == nullptr && device_->device_type_ == DT_SwapCudaGPU) {
+    auto tmp_data_ = device_->UpdateGpuPtrInfo(this);
+    return static_cast<char*>(tmp_data_) + offset_;
+  }
+
   return static_cast<char*>(data_) + offset_;
 }
+
+/// Get data without calling the original data() to avoid appending block info.
+void* Block::get_data() { return data_; }
+
+// Update data_, after the swap-in completes.
+void Block::update_data(void* new_data) { data_ = new_data; }
 
 void Block::free_data() {
   if (data_) {
