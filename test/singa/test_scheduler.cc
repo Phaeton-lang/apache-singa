@@ -24,11 +24,12 @@
 
 #include "gtest/gtest.h"
 #include "singa/core/device.h"
-#include "singa/core/scheduler.h"
+//#include "singa/core/scheduler.h"
 #include "singa/core/tensor.h"
 #include "singa/singa_config.h"
 
 typedef std::vector<int> IntVec;
+using singa::OpType;
 using singa::Blk2InfoMap;
 using singa::BlkInfo;
 using singa::Block;
@@ -163,7 +164,7 @@ TEST_F(TestGraph, AddOp) {
     Tensor out(Shape{1}, dev);
     auto op = [](Context *ctx) mutable {};
 
-    graph.AddOperation(op, {in.block()}, {out.block()});
+    graph.AddOperation(op, OpType::kUndefined, {in.block()}, {out.block()});
 
     EXPECT_EQ(1u, nodes.size());
     EXPECT_EQ(2u, edges.size());
@@ -203,8 +204,8 @@ TEST_F(TestGraph, AddSyncOp) {
     Tensor out(Shape{1}, dev);
     auto op = [](Context *ctx) mutable {};
 
-    graph.AddOperation(op, {in.block()}, {out.block()});
-    graph.AddOperation(op, {}, {});
+    graph.AddOperation(op, OpType::kUndefined, {in.block()}, {out.block()});
+    graph.AddOperation(op, OpType::kUndefined, {}, {});
 
     EXPECT_EQ(2u, nodes.size());
     EXPECT_EQ(3u, edges.size());
@@ -249,7 +250,7 @@ TEST_F(TestGraph, AddInplaceOp) {
     Tensor out(Shape{1}, dev);
     auto op = [](Context *ctx) mutable {};
 
-    graph.AddOperation(op, {in.block()}, {in.block()});
+    graph.AddOperation(op, OpType::kUndefined, {in.block()}, {in.block()});
 
     EXPECT_EQ(1u, nodes.size());
     EXPECT_EQ(2u, edges.size());
@@ -268,7 +269,7 @@ TEST_F(TestGraph, AddInplaceOp) {
     CheckWriteBlocks(write_blocks, BlockVec({in.block()}));
     EXPECT_TRUE(graph.dirty());
 
-    graph.AddOperation(op, {in.block(), out.block()}, {out.block()});
+    graph.AddOperation(op, OpType::kUndefined, {in.block(), out.block()}, {out.block()});
 
     EXPECT_EQ(2u, nodes.size());
     EXPECT_EQ(4u, edges.size());
@@ -309,7 +310,7 @@ TEST_F(TestGraph, BlockTypeInput) {
     Tensor out(Shape{1}, dev);
     auto op = [](Context *ctx) mutable {};
 
-    graph.AddOperation(op, {in.block()}, {out.block()});
+    graph.AddOperation(op, OpType::kUndefined, {in.block()}, {out.block()});
 
     EXPECT_EQ(1u, nodes.size());
     EXPECT_EQ(2u, edges.size());
@@ -340,9 +341,9 @@ TEST_F(TestGraph, BlockTypeParam) {
     Tensor out(Shape{1}, dev);
     auto op = [](Context *ctx) mutable {};
 
-    graph.AddOperation(op, {in.block()}, {in.block()});
-    graph.AddOperation(op, {in.block(), mid.block()}, {out.block()});
-    graph.AddOperation(op, {out.block()}, {mid.block()});
+    graph.AddOperation(op, OpType::kUndefined, {in.block()}, {in.block()});
+    graph.AddOperation(op, OpType::kUndefined, {in.block(), mid.block()}, {out.block()});
+    graph.AddOperation(op, OpType::kUndefined, {out.block()}, {mid.block()});
 
     EXPECT_EQ(3u, nodes.size());
     EXPECT_EQ(5u, edges.size());
@@ -377,9 +378,9 @@ TEST_F(TestGraph, BlockTypeInter) {
     Tensor out(Shape{1}, dev);
     auto op = [](Context *ctx) mutable {};
 
-    graph.AddOperation(op, {in.block()}, {mid.block(), out.block()});
-    graph.AddOperation(op, {mid.block()}, {});
-    graph.AddOperation(op, {out.block()}, {out.block()});
+    graph.AddOperation(op, OpType::kUndefined, {in.block()}, {mid.block(), out.block()});
+    graph.AddOperation(op, OpType::kUndefined, {mid.block()}, {});
+    graph.AddOperation(op, OpType::kUndefined, {out.block()}, {out.block()});
 
     EXPECT_EQ(3u, nodes.size());
     EXPECT_EQ(4u, edges.size());
@@ -415,8 +416,8 @@ TEST_F(TestGraph, BlockTypeEnd) {
     Tensor out2(Shape{1}, dev);
     auto op = [](Context *ctx) mutable {};
 
-    graph.AddOperation(op, {in.block()}, {out1.block()});
-    graph.AddOperation(op, {}, {out2.block()});
+    graph.AddOperation(op, OpType::kUndefined, {in.block()}, {out1.block()});
+    graph.AddOperation(op, OpType::kUndefined, {}, {out2.block()});
 
     EXPECT_EQ(2u, nodes.size());
     EXPECT_EQ(3u, edges.size());
@@ -482,13 +483,13 @@ TEST_F(TestGraph, RunGraph) {
       singa::Add(dx1, dx2, &dx);
     };
 
-    graph.AddOperation(op1, {in.block(), b1.block()}, {mid.block()});
-    graph.AddOperation(op2, {mid.block(), in.block()}, {out.block()});
-    graph.AddOperation(op3, {out.block(), b2.block()}, {out.block()});
-    graph.AddOperation(op4, {out.block()}, {dy1.block(), db2.block()});
-    graph.AddOperation(op5, {dy1.block()}, {dy2.block(), dx1.block()});
-    graph.AddOperation(op6, {dy2.block()}, {dx2.block(), db1.block()});
-    graph.AddOperation(op7, {dx1.block(), dx2.block()}, {dx.block()});
+    graph.AddOperation(op1, OpType::kUndefined, {in.block(), b1.block()}, {mid.block()});
+    graph.AddOperation(op2, OpType::kUndefined, {mid.block(), in.block()}, {out.block()});
+    graph.AddOperation(op3, OpType::kUndefined, {out.block(), b2.block()}, {out.block()});
+    graph.AddOperation(op4, OpType::kUndefined, {out.block()}, {dy1.block(), db2.block()});
+    graph.AddOperation(op5, OpType::kUndefined, {dy1.block()}, {dy2.block(), dx1.block()});
+    graph.AddOperation(op6, OpType::kUndefined, {dy2.block()}, {dx2.block(), db1.block()});
+    graph.AddOperation(op7, OpType::kUndefined, {dx1.block(), dx2.block()}, {dx.block()});
 
     EXPECT_EQ(7u, nodes.size());
     EXPECT_EQ(14u, edges.size());
@@ -559,13 +560,13 @@ TEST_F(TestGraph, RunInSerial) {
       singa::Add(dx1, dx2, &dx);
     };
 
-    graph.AddOperation(op1, {in.block(), b1.block()}, {mid.block()});
-    graph.AddOperation(op2, {mid.block(), in.block()}, {out.block()});
-    graph.AddOperation(op3, {out.block(), b2.block()}, {out.block()});
-    graph.AddOperation(op4, {out.block()}, {dy1.block(), db2.block()});
-    graph.AddOperation(op5, {dy1.block()}, {dy2.block(), dx1.block()});
-    graph.AddOperation(op6, {dy2.block()}, {dx2.block(), db1.block()});
-    graph.AddOperation(op7, {dx1.block(), dx2.block()}, {dx.block()});
+    graph.AddOperation(op1, OpType::kUndefined, {in.block(), b1.block()}, {mid.block()});
+    graph.AddOperation(op2, OpType::kUndefined, {mid.block(), in.block()}, {out.block()});
+    graph.AddOperation(op3, OpType::kUndefined, {out.block(), b2.block()}, {out.block()});
+    graph.AddOperation(op4, OpType::kUndefined, {out.block()}, {dy1.block(), db2.block()});
+    graph.AddOperation(op5, OpType::kUndefined, {dy1.block()}, {dy2.block(), dx1.block()});
+    graph.AddOperation(op6, OpType::kUndefined, {dy2.block()}, {dx2.block(), db1.block()});
+    graph.AddOperation(op7, OpType::kUndefined, {dx1.block(), dx2.block()}, {dx.block()});
 
     EXPECT_EQ(7u, nodes.size());
     EXPECT_EQ(14u, edges.size());
@@ -651,17 +652,17 @@ TEST_F(TestGraph, AutoRecycle) {
       };
       auto op10 = [dx, dx3](Context *ctx) mutable { singa::Add(dx, dx3, &dx); };
 
-      graph.AddOperation(op1, {in.block(), b1.block()}, {mid1.block()});
-      graph.AddOperation(op2, {mid1.block(), in.block()}, {out.block()});
-      graph.AddOperation(op3, {in.block(), b2.block()}, {mid2.block()});
-      graph.AddOperation(op4, {out.block(), mid2.block()}, {out.block()});
-      graph.AddOperation(op5, {out.block()}, {dy1.block(), dy2.block()});
-      graph.AddOperation(op6, {in.block(), mid1.block(), dy1.block()},
+      graph.AddOperation(op1, OpType::kUndefined, {in.block(), b1.block()}, {mid1.block()});
+      graph.AddOperation(op2, OpType::kUndefined, {mid1.block(), in.block()}, {out.block()});
+      graph.AddOperation(op3, OpType::kUndefined, {in.block(), b2.block()}, {mid2.block()});
+      graph.AddOperation(op4, OpType::kUndefined, {out.block(), mid2.block()}, {out.block()});
+      graph.AddOperation(op5, OpType::kUndefined, {out.block()}, {dy1.block(), dy2.block()});
+      graph.AddOperation(op6, OpType::kUndefined, {in.block(), mid1.block(), dy1.block()},
                          {dy3.block(), dx1.block()});
-      graph.AddOperation(op7, {dy3.block()}, {dx2.block(), db1.block()});
-      graph.AddOperation(op8, {dy2.block()}, {dx3.block(), db2.block()});
-      graph.AddOperation(op9, {dx1.block(), dx2.block()}, {dx.block()});
-      graph.AddOperation(op10, {dx.block(), dx3.block()}, {dx.block()});
+      graph.AddOperation(op7, OpType::kUndefined, {dy3.block()}, {dx2.block(), db1.block()});
+      graph.AddOperation(op8, OpType::kUndefined, {dy2.block()}, {dx3.block(), db2.block()});
+      graph.AddOperation(op9, OpType::kUndefined, {dx1.block(), dx2.block()}, {dx.block()});
+      graph.AddOperation(op10, OpType::kUndefined, {dx.block(), dx3.block()}, {dx.block()});
 
       in.SetValue(0);
       b1.SetValue(-1);
