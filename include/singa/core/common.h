@@ -126,7 +126,7 @@ enum OpType {
     kMult,
 };
 
-std::string to_string(OpType type);
+std::string op_type_to_string(OpType type);
 
 namespace lang {
 /// To implemente functions using cpp libraries
@@ -150,7 +150,9 @@ class Block {
   // Disabled as it is not used currently.
   // Block(void* ptr, size_t size, size_t offset, std::shared_ptr<atomic<int>>
   //  ref) : data_(ptr), size_(size), offset_(offset), ref_count_(ref) {}
+  /// Memory block write.
   void* mutable_data();
+  /// Memory block read.
   const void* data() const;
   void free_data();
   void* get_data();

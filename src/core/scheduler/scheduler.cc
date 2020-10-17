@@ -37,7 +37,12 @@
 
 namespace singa {
 
-std::string to_string(const BlockType &bt) {
+// key is a string of block start memory address,
+// value is the block type, candidate value can be
+// "Input", "Param", "Inter", "End".
+std::map<std::string, std::string> BlkTypeMap;
+
+std::string block_type_to_string(const BlockType &bt) {
   switch (bt) {
     case BlockType::kInput:
       return "Input";
@@ -614,7 +619,7 @@ void Graph::Draw() {
          << " [shape=record, fillcolor=gold2, style=\"filled, rounded\", "
             "label=\"{"
          << "op_" + std::to_string(nodes_[i]->id_)
-         << "| type: " << to_string(nodes_[i]->type_)
+         << "| type: " << op_type_to_string(nodes_[i]->type_)
          << "| time: " << nodes_[i]->est_time_ << "us"
          << "}\"];" << std::endl;
   }
@@ -624,17 +629,45 @@ void Graph::Draw() {
       {BlockType::kParam, "aliceblue"},
       {BlockType::kInter, "crimson"},
       {BlockType::kEnd, "bisque4"}};
+  std::map<BlockType, float> block_size_map = {{BlockType::kInput, 0.f},
+                                               {BlockType::kParam, 0.f},
+                                               {BlockType::kInter, 0.f},
+                                               {BlockType::kEnd, 0.f}};
   for (auto blk_info : blocks_) {
     Block *block = blk_info.first;
     BlkInfo *info = blk_info.second;
+    std::stringstream tmp_ss;
+    tmp_ss << block->get_data();
+    BlkTypeMap[tmp_ss.str()] = block_type_to_string(info->type());
     fout << "blk_" << info->id_
          << " [shape=record, fillcolor=" << block_color_map[info->type()]
          << ", style=\"filled\", label=\"{"
-         << "blk_" << info->id_ << "| size: " << block->size()
-         << "| type: " << to_string(info->type())
+         << "blk_" << info->id_ << "| addr: " << block->get_data()
+         << "| size: " << block->size()
+         << "| type: " << block_type_to_string(info->type())
          << "| swapin: " << block->GetEstSwapInTime()
-         << "| swapout: " << block->GetEstSwapOutTime()
-         << " }\"];" << std::endl;
+         << "| swapout: " << block->GetEstSwapOutTime() << " }\"];"
+         << std::endl;
+    block_size_map[info->type()] += (block->size() / 1024.0 / 1024.0);
+  }
+  // dump BlkTypeMap into file
+
+  std::fstream blktype_info_log("block-type-info.log",
+                                std::ios::in | std::ios::out | std::ios::app);
+  blktype_info_log << "%===----- BlkTypeMap -----===%\n";
+  for (auto &it : BlkTypeMap) {
+    blktype_info_log << it.first << ' ' << it.second << '\n';
+  }
+  // dump memory block info
+  std::cout << "===---------- GPU Memory Block Info Dump ----------===\n";
+  float total_mem = 0;
+  for (auto &it : block_size_map) {
+    std::cout << block_type_to_string(it.first) << ": " << it.second << " MB\n";
+    total_mem += it.second;
+  }
+  for (auto &it : block_size_map) {
+    std::cout << block_type_to_string(it.first)
+              << "(%): " << it.second / total_mem * 100.0 << std::endl;
   }
   // edges
   for (auto edge : edges_) {

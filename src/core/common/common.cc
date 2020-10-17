@@ -17,13 +17,16 @@
  */
 
 #include <cassert>
+#include <fstream>
 #include "singa/core/common.h"
 
 #include "singa/core/device.h"
 
+#define MEM_LOG_DBG
+
 namespace singa {
 
-std::string to_string(OpType type) {
+std::string op_type_to_string(OpType type) {
 #define AddOPType(tp) case OpType::k##tp: return #tp;
     switch (type) {
         AddOPType(Undefined)
@@ -136,6 +139,12 @@ void* Block::mutable_data() {
       return static_cast<char*>(tmp_data_) + offset_;
     }
   }
+
+#ifdef MEM_LOG_DBG
+  std::fstream mem_info_log("mem-info.log", std::ios::in| std::ios::out| std::ios::app);
+  int64_t time_stamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  mem_info_log << "WRITE: " << data_ << ' ' << size() << ' ' << time_stamp << '\n';
+#endif
   // Original case.
   return static_cast<char*>(data_) + offset_;
 }
@@ -161,6 +170,11 @@ const void* Block::data() const {
     return static_cast<char*>(tmp_data_) + offset_;
   }
 
+#ifdef MEM_LOG_DBG
+  std::fstream mem_info_log("mem-info.log", std::ios::in| std::ios::out| std::ios::app);
+  int64_t time_stamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  mem_info_log << "READ: " << data_ << ' ' << size() << ' ' << time_stamp << '\n';
+#endif
   return static_cast<char*>(data_) + offset_;
 }
 

@@ -23,7 +23,8 @@ namespace singa {
 
 const int WARMUP_TIMES = 8;
 const int REPEAT_TIMES = 32;
-bool Device::lazy_alloc_ = true;
+//bool Device::lazy_alloc_ = true;
+bool Device::lazy_alloc_ = false;
 
 Device::Device(int id, int num_executors)
     : id_(id), num_executors_(num_executors) {
