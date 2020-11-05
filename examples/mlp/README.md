@@ -1,8 +1,11 @@
 # MLP data scales
 
 w0 shape: (`data_size, perceptron_size`)
+
 b0 shape: (`perceptron_size,`)
+
 w1 shape: (`perceptron_size, num_classes`)
+
 b1 shape: (`num_classes,`)
 
 Here we set `data_size=2` and `num_classes=2`.
