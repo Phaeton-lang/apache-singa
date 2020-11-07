@@ -30,7 +30,7 @@ import time
 import argparse
 from PIL import Image
 
-import vgg
+#import vgg
 
 # Data Augmentation
 def augmentation(x, batch_size):
@@ -205,7 +205,7 @@ def run(global_rank,
         train_loss = np.zeros(shape=[1], dtype=np.float32)
 
         model.train()
-        for b in range(num_train_batch):
+        for b in range(1):
             # Generate the patch data in this iteration
             x = train_x[idx[b * batch_size:(b + 1) * batch_size]]
             if model.dimension == 4:
@@ -237,18 +237,19 @@ def run(global_rank,
                    (num_train_batch * batch_size * world_size)),
                   flush=True)
 
+        # FIXME: JS_LEE, skip the evaluation phase
         # Evaluation Phase
-        model.eval()
-        for b in range(num_val_batch):
-            x = val_x[b * batch_size:(b + 1) * batch_size]
-            if model.dimension == 4:
-                if (image_size != model.input_size):
-                    x = resize_dataset(x, model.input_size)
-            y = val_y[b * batch_size:(b + 1) * batch_size]
-            tx.copy_from_numpy(x)
-            ty.copy_from_numpy(y)
-            out_test = model(tx)
-            test_correct += accuracy(tensor.to_numpy(out_test), y)
+        #model.eval()
+        #for b in range(num_val_batch):
+        #    x = val_x[b * batch_size:(b + 1) * batch_size]
+        #    if model.dimension == 4:
+        #        if (image_size != model.input_size):
+        #            x = resize_dataset(x, model.input_size)
+        #    y = val_y[b * batch_size:(b + 1) * batch_size]
+        #    tx.copy_from_numpy(x)
+        #    ty.copy_from_numpy(y)
+        #    out_test = model(tx)
+        #    test_correct += accuracy(tensor.to_numpy(out_test), y)
 
         if DIST:
             # Reduce the Evaulation Accuracy from Multiple Devices
