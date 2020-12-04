@@ -783,7 +783,8 @@ void SwapCudaGPU::Plan() {
 
   /// Majority voting, can specify mode here, can specify load_limit.
   auto tmp_load = origin_load;
-  // mem_limit_majority_voting is a tunable parm.
+  // FIXME: mem_limit_majority_voting is a tunable parm.
+  // TODO: auto determine the mem_limit_majority_voting.
   // auto mem_limit_majority_voting = 550 << 20;
   auto mem_limit_majority_voting = 100 << 20;
   // Select swapping blocks based on the PS(priority score) or BO score with
