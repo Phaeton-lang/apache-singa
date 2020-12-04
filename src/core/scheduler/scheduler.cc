@@ -620,7 +620,9 @@ void Graph::Draw() {
             "label=\"{"
          << "op_" + std::to_string(nodes_[i]->id_)
          << "| type: " << op_type_to_string(nodes_[i]->type_)
+#if 0
          << "| time: " << nodes_[i]->est_time_ << "us"
+#endif
          << "}\"];" << std::endl;
   }
   // blocks
@@ -643,10 +645,13 @@ void Graph::Draw() {
          << " [shape=record, fillcolor=" << block_color_map[info->type()]
          << ", style=\"filled\", label=\"{"
          << "blk_" << info->id_ << "| addr: " << block->get_data()
-         << "| size: " << block->size()
+         << "| size: " << block->size()/1024.0/1024.0 << "MB"
          << "| type: " << block_type_to_string(info->type())
+#if 0
          << "| swapin: " << block->GetEstSwapInTime()
-         << "| swapout: " << block->GetEstSwapOutTime() << " }\"];"
+         << "| swapout: " << block->GetEstSwapOutTime()
+#endif
+         << " }\"];"
          << std::endl;
     block_size_map[info->type()] += (block->size() / 1024.0 / 1024.0);
   }
