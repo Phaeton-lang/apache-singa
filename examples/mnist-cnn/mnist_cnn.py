@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     if args.use_swap_cuda_gpu:
         print('Using SwapCudaGPU')
-        dev = device.create_swap_cuda_gpu_on(0)
+        dev = device.create_swap_cuda_gpu_on(0, 'majority_voting', 'stick-to-limit', 100)
     else:
         print('Using CudaGPU')
         dev = device.create_cuda_gpu()

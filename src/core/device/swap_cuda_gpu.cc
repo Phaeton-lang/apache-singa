@@ -786,7 +786,8 @@ void SwapCudaGPU::Plan() {
   // FIXME: mem_limit_majority_voting is a tunable parm.
   // TODO: auto determine the mem_limit_majority_voting.
   // auto mem_limit_majority_voting = 550 << 20;
-  auto mem_limit_majority_voting = 100 << 20;
+  int mem_limit = GetWorkloadMemoryLimit();
+  auto mem_limit_majority_voting = mem_limit << 20;
   // Select swapping blocks based on the PS(priority score) or BO score with
   // load updated. vec_swap_majority_voting contains the candidate swapping
   // blocks.
@@ -828,10 +829,12 @@ SwapCudaGPU::~SwapCudaGPU() {
 const int kNumCudaStream = 1;
 
 SwapCudaGPU::SwapCudaGPU(const std::string& blk_sel_mode,
-                         const std::string& blk_sched_mode, int id)
+                         const std::string& blk_sched_mode,
+                         const int& mem_limit, int id)
     : Device(DT_SwapCudaGPU, id, kNumCudaStream),
       blk_select_mode(blk_sel_mode),
-      blk_scheduling_mode(blk_sched_mode) {
+      blk_scheduling_mode(blk_sched_mode),
+      workload_mem_limit(mem_limit) {
   MemPoolConf conf;
   conf.add_device(id);
   // Replace this pool with swap in/out support.
@@ -840,11 +843,13 @@ SwapCudaGPU::SwapCudaGPU(const std::string& blk_sel_mode,
 }
 
 SwapCudaGPU::SwapCudaGPU(const std::string& blk_sel_mode,
-                         const std::string& blk_sched_mode, int id,
+                         const std::string& blk_sched_mode,
+                         const int& mem_limit, int id,
                          std::shared_ptr<DeviceMemPool> pool)
     : Device(DT_SwapCudaGPU, id, kNumCudaStream),
       blk_select_mode(blk_sel_mode),
-      blk_scheduling_mode(blk_sched_mode) {
+      blk_scheduling_mode(blk_sched_mode),
+      workload_mem_limit(mem_limit) {
   CHECK(pool != nullptr);
   pool_ = pool;
   Setup();

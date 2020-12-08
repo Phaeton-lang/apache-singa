@@ -102,8 +102,8 @@ class Device {
   /// Submit the operation to the device, which may execute it right now or
   /// delay it depending on the scheduler.
   void Exec(function<void(Context*)>&& fn, OpType type,
-            const vector<Block*> read_blocks,
-            const vector<Block*> write_blocks, bool use_rand_generator = false);
+            const vector<Block*> read_blocks, const vector<Block*> write_blocks,
+            bool use_rand_generator = false);
 
   void RunGraph(bool serial = false);
 
@@ -345,9 +345,12 @@ class SwapCudaGPU : public Device {
  public:
   ~SwapCudaGPU();
   /// Construct the device using default mem pool setting.
-  SwapCudaGPU(const std::string& blk_sel_mode, const std::string& blk_sched_mode, int id = 0);
+  SwapCudaGPU(const std::string& blk_sel_mode,
+              const std::string& blk_sched_mode, const int& mem_limit,
+              int id = 0);
   /// Construct the device given the physical device ID and memory pool.
-  SwapCudaGPU(const std::string& blk_sel_mode, const std::string& blk_sched_mode, int id,
+  SwapCudaGPU(const std::string& blk_sel_mode,
+              const std::string& blk_sched_mode, const int& mem_limit, int id,
               std::shared_ptr<DeviceMemPool> pool);
 
   void SetRandSeed(unsigned seed) override;
@@ -360,6 +363,8 @@ class SwapCudaGPU : public Device {
   std::string GetBlockSelectMode() const { return blk_select_mode; }
 
   std::string GetBlockScheduleMode() const { return blk_scheduling_mode; }
+
+  int GetWorkloadMemoryLimit() const { return workload_mem_limit; }
 
  protected:
   void DoExec(function<void(Context*)>&& fn, int executor) override;
@@ -494,6 +499,8 @@ class SwapCudaGPU : public Device {
   /// User-configurable scheduling hyper-parameters.
   std::string blk_select_mode = "majority_voting";
   std::string blk_scheduling_mode = "stick-to-limit";
+  /// peak memory load limit, measured in MB.
+  int workload_mem_limit;
 
  private:
   shared_ptr<DeviceMemPool> pool_;
@@ -600,12 +607,13 @@ class Platform {
   /// Create a set of SwapCudaGPU Device using 'num_devices' free GPUs.
   static const std::vector<std::shared_ptr<Device>> CreateSwapCudaGPUs(
       const std::string& blk_sel_mode, const std::string& blk_sched_mode,
-      const size_t num_devices, size_t init_size = 0);
+      const int& mem_limit, const size_t num_devices, size_t init_size = 0);
 
   /// Create a set of SwapCudaGPU Device using given GPU IDs.
   static const std::vector<std::shared_ptr<Device>> CreateSwapCudaGPUsOn(
       const std::string& blk_sel_mode, const std::string& blk_sched_mode,
-      const std::vector<int>& devices, size_t init_size = 0);
+      const int& mem_limit, const std::vector<int>& devices,
+      size_t init_size = 0);
 
   static std::vector<std::shared_ptr<Device>> UsedDevice;
   /// This function is implementd by Caffe (http://caffe.berkeleyvision.org/).
