@@ -790,19 +790,20 @@ void SwapCudaGPU::Plan() {
   // Select swapping blocks based on the PS(priority score) or BO score with
   // load updated. vec_swap_majority_voting contains the candidate swapping
   // blocks.
-  auto vec_swap_majority_voting = SelectBlock(
-      vec_swap, tmp_load, mem_limit_majority_voting, "majority_voting");
+  std::string blk_sel_mode = GetBlockSelectMode();
+  auto vec_swap_majority_voting =
+      SelectBlock(vec_swap, tmp_load, mem_limit_majority_voting, blk_sel_mode);
   // vec_swap_select_global = vec_swap_majority_voting;
 
   // Here origin_load is 3 iteration load, for scheduling plan.
   // std::vector<double>
   auto vec_load_WDOA = origin_load;
   // Here we set the scheduling mode to: stick to the memory load limit.
-  std::string mode = "stick-to-limit";
+  std::string blk_sched_mode = GetBlockScheduleMode();
 
   double overhead_WDOA = 0;
   Scheduling(vec_swap_majority_voting, vec_load_WDOA, overhead_WDOA,
-             mem_limit_majority_voting, mode);
+             mem_limit_majority_voting, blk_sched_mode);
   BuildMetaTables(vec_swap_majority_voting);
 }
 
@@ -826,7 +827,11 @@ SwapCudaGPU::~SwapCudaGPU() {
 
 const int kNumCudaStream = 1;
 
-SwapCudaGPU::SwapCudaGPU(int id) : Device(DT_SwapCudaGPU, id, kNumCudaStream) {
+SwapCudaGPU::SwapCudaGPU(const std::string& blk_sel_mode,
+                         const std::string& blk_sched_mode, int id)
+    : Device(DT_SwapCudaGPU, id, kNumCudaStream),
+      blk_select_mode(blk_sel_mode),
+      blk_scheduling_mode(blk_sched_mode) {
   MemPoolConf conf;
   conf.add_device(id);
   // Replace this pool with swap in/out support.
@@ -834,8 +839,12 @@ SwapCudaGPU::SwapCudaGPU(int id) : Device(DT_SwapCudaGPU, id, kNumCudaStream) {
   Setup();
 }
 
-SwapCudaGPU::SwapCudaGPU(int id, std::shared_ptr<DeviceMemPool> pool)
-    : Device(DT_SwapCudaGPU, id, kNumCudaStream) {
+SwapCudaGPU::SwapCudaGPU(const std::string& blk_sel_mode,
+                         const std::string& blk_sched_mode, int id,
+                         std::shared_ptr<DeviceMemPool> pool)
+    : Device(DT_SwapCudaGPU, id, kNumCudaStream),
+      blk_select_mode(blk_sel_mode),
+      blk_scheduling_mode(blk_sched_mode) {
   CHECK(pool != nullptr);
   pool_ = pool;
   Setup();

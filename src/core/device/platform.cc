@@ -145,16 +145,19 @@ const vector<shared_ptr<Device>> Platform::CreateCudaGPUsOn(
   return ret;
 }
 
-// TODO: Implement SwapCudaGPU.
+// Implement SwapCudaGPU.
 const vector<shared_ptr<Device>> Platform::CreateSwapCudaGPUs(
+    const std::string& blk_sel_mode, const std::string& blk_sched_mode,
     const size_t num_devices, size_t init_size) {
   const vector<int> gpus = GetGPUIDs();
   CHECK_LE(num_devices, gpus.size());
   vector<int> use_gpus(gpus.begin(), gpus.begin() + num_devices);
-  return CreateSwapCudaGPUsOn(use_gpus, init_size);
+  return CreateSwapCudaGPUsOn(blk_sel_mode, blk_sched_mode, use_gpus,
+                              init_size);
 }
 
 const vector<shared_ptr<Device>> Platform::CreateSwapCudaGPUsOn(
+    const std::string& blk_sel_mode, const std::string& blk_sched_mode,
     const vector<int>& devices, size_t init_size) {
   MemPoolConf conf;
   if (init_size > 0) conf.set_init_size(init_size);
@@ -173,7 +176,8 @@ const vector<shared_ptr<Device>> Platform::CreateSwapCudaGPUsOn(
   vector<shared_ptr<Device>> ret;
   for (size_t i = 0; i < devices.size(); i++) {
     if (UsedDevice[devices[i]] == nullptr) {
-      UsedDevice[devices[i]] = std::make_shared<SwapCudaGPU>(devices[i], pool);
+      UsedDevice[devices[i]] = std::make_shared<SwapCudaGPU>(
+          blk_sel_mode, blk_sched_mode, devices[i], pool);
     }
     ret.push_back(UsedDevice[devices[i]]);
   }

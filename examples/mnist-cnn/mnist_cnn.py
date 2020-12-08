@@ -77,6 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('file_path', type=str, help='the dataset path')
     parser.add_argument('--use_cpu', action='store_true')
     parser.add_argument('--use_swap_cuda_gpu', action='store_true')
+    parser.add_argument('--batch-size', default=600, type=int, help='batch size', dest='batch_size')
     args = parser.parse_args()
 
     assert os.path.exists(args.file_path), \
@@ -95,7 +96,7 @@ if __name__ == '__main__':
 
     train, test = load_data(args.file_path)
 
-    batch_number = 600
+    batch_number = args.batch_size
     num_classes = 10
     epochs = 1
 
