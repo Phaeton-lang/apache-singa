@@ -68,9 +68,9 @@ class Platform {
   CreateCudaGPUs(const size_t num_devices, size_t init_size = 0);
   static const std::vector<std::shared_ptr<Device>>
   CreateCudaGPUsOn(const std::vector<int> &devices, size_t init_size = 0);
-  CreateSwapCudaGPUs(const size_t num_devices, size_t init_size = 0);
+  CreateSwapCudaGPUs(const std::string& blk_sel_mode, const std::string& blk_sched_mode, const size_t num_devices, size_t init_size = 0);
   static const std::vector<std::shared_ptr<Device>>
-  CreateSwapCudaGPUsOn(const std::vector<int> &devices, size_t init_size = 0);
+  CreateSwapCudaGPUsOn(const std::string& blk_sel_mode, const std::string& blk_sched_mode, const std::vector<int> &devices, size_t init_size = 0);
 #endif // USE_CUDA
 
 #if USE_OPENCL

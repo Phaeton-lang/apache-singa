@@ -138,7 +138,7 @@ def create_cuda_gpu_on(device_id, set_default=True):
         set_default_device(devices[0])
     return devices[0]
 
-def create_swap_cuda_gpus(num):
+def create_swap_cuda_gpus(num, block_selecting_mode='majority_voting', block_scheduling_mode='stick-to-limit'):
     '''Create a list of SwapCudaGPU devices.
 
     Args:
@@ -147,23 +147,23 @@ def create_swap_cuda_gpus(num):
         a list of swig converted SwapCudaGPU devices.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
-    return singa.Platform.CreateSwapCudaGPUs(num)
+    return singa.Platform.CreateSwapCudaGPUs(block_selecting_mode, block_scheduling_mode, num)
 
 
-def create_swap_cuda_gpu(set_default=True):
+def create_swap_cuda_gpu(block_selecting_mode='majority_voting', block_scheduling_mode='stick-to-limit', set_default=True):
     '''Create a single SwapCudaGPU device.
 
     Returns:
         a swig converted SwapCudaGPU device.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
-    devices = singa.Platform.CreateSwapCudaGPUs(1)
+    devices = singa.Platform.CreateSwapCudaGPUs(block_selecting_mode, block_scheduling_mode, 1)
     if set_default is True:
         set_default_device(devices[0])
     return devices[0]
 
 
-def create_swap_cuda_gpus_on(device_ids):
+def create_swap_cuda_gpus_on(device_ids, block_selecting_mode='majority_voting', block_scheduling_mode='stick-to-limit'):
     '''Create a list of SwapCudaGPU devices.
 
     Args:
@@ -173,10 +173,10 @@ def create_swap_cuda_gpus_on(device_ids):
         a list of swig converted SwapCudaGPU devices.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
-    return singa.Platform.CreateSwapCudaGPUsOn(device_ids)
+    return singa.Platform.CreateSwapCudaGPUsOn(block_selecting_mode, block_scheduling_mode, device_ids)
 
 
-def create_swap_cuda_gpu_on(device_id, set_default=True):
+def create_swap_cuda_gpu_on(device_id, block_selecting_mode='majority_voting', block_scheduling_mode='stick-to-limit', set_default=True):
     '''Create a SwapCudaGPU device on the given device ID.
 
     Args:
@@ -186,7 +186,7 @@ def create_swap_cuda_gpu_on(device_id, set_default=True):
         a swig converted SwapCudaGPU device.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
-    devices = create_swap_cuda_gpus_on([device_id])
+    devices = create_swap_cuda_gpus_on([device_id], block_selecting_mode, block_scheduling_mode)
     if set_default is True:
         set_default_device(devices[0])
     return devices[0]
