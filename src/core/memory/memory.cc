@@ -468,6 +468,11 @@ void SwapPool::Free(void *ptr) {
   //    << " " << cnmemGetErrorString(status);
   if (pool_flag == 0) {
     cudaError_t status = cudaFree(ptr);
+    // JSON LEE: trace cudaFree failure status
+    if (status == cudaErrorInvalidValue) {
+      std::cout << __FILE__ << __func__ << ":" << __LINE__ << " "
+                << cudaGetErrorName(status) << '\n';
+    }
     CHECK_EQ(status, cudaError_t::cudaSuccess);
   } else {
     // pool_flag is 1.
