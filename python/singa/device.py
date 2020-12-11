@@ -147,7 +147,7 @@ def create_swap_cuda_gpus(num, block_selecting_mode='majority_voting', block_sch
         a list of swig converted SwapCudaGPU devices.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
-    return singa.Platform.CreateSwapCudaGPUs(block_selecting_mode, block_scheduling_mode, num)
+    return singa.Platform.CreateSwapCudaGPUs(block_selecting_mode.encode(), block_scheduling_mode.encode(), num)
 
 
 def create_swap_cuda_gpu(block_selecting_mode='majority_voting', block_scheduling_mode='stick-to-limit', workload_mem_limit=500, set_default=True):
@@ -157,7 +157,7 @@ def create_swap_cuda_gpu(block_selecting_mode='majority_voting', block_schedulin
         a swig converted SwapCudaGPU device.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
-    devices = singa.Platform.CreateSwapCudaGPUs(block_selecting_mode, block_scheduling_mode, workload_mem_limit, 1)
+    devices = singa.Platform.CreateSwapCudaGPUs(block_selecting_mode.encode(), block_scheduling_mode.encode(), workload_mem_limit, 1)
     if set_default is True:
         set_default_device(devices[0])
     return devices[0]
@@ -173,7 +173,7 @@ def create_swap_cuda_gpus_on(device_ids, block_selecting_mode='majority_voting',
         a list of swig converted SwapCudaGPU devices.
     '''
     assert singa.USE_CUDA, 'SINGA has not been compiled with CUDA enabled.'
-    return singa.Platform.CreateSwapCudaGPUsOn(block_selecting_mode, block_scheduling_mode, workload_mem_limit, device_ids)
+    return singa.Platform.CreateSwapCudaGPUsOn(block_selecting_mode.encode(), block_scheduling_mode.encode(), workload_mem_limit, device_ids)
 
 
 def create_swap_cuda_gpu_on(device_id, block_selecting_mode='majority_voting', block_scheduling_mode='stick-to-limit', workload_mem_limit=500, set_default=True):
