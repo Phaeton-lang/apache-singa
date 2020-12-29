@@ -122,11 +122,11 @@ __all__ = [
 
 class ResNet(module.Module):
 
-    def __init__(self, block, layers, num_classes=10, num_channels=3):
+    def __init__(self, block, layers, num_classes=10, num_channels=3, in_size=16):
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.num_classes = num_classes
-        self.input_size = 224
+        self.input_size = in_size
         self.dimension = 4
         self.conv1 = autograd.Conv2d(num_channels,
                                      64,

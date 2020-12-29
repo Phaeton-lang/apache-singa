@@ -6,10 +6,10 @@ import numpy as np
 # TODO: JSON LEE, refacting to be more pythonic!!!
 class VGGNet(module.Module):
 
-    def __init__(self, num_classes=10, num_channels=3):
+    def __init__(self, num_classes=10, num_channels=3, in_size=184):
         super(VGGNet, self).__init__()
         self.num_classes = num_classes
-        self.input_size = 224
+        self.input_size = in_size
         self.dimension = 4
 
         # autograd.Conv2d, default stride is 1
@@ -57,7 +57,14 @@ class VGGNet(module.Module):
         self.bn12 = autograd.BatchNorm2d(512)
         self.pooling5 = autograd.MaxPool2d(2, 2, padding=0)
 
-        self.linear1 = autograd.Linear(25088, 512)
+        if self.input_size == 224:
+            self.linear1 = autograd.Linear(25088, 512)
+        elif self.input_size == 184:
+            self.linear1 = autograd.Linear(12800, 512)
+        elif self.input_size == 32 or\
+        self.input_size == 28 or\
+        self.input_size == 16:
+            self.linear1 = autograd.Linear(512, 512)
         self.linear2 = autograd.Linear(512, num_classes)
 
     def forward(self, x):
@@ -65,7 +72,7 @@ class VGGNet(module.Module):
         y = self.conv1(x)
         y = self.bn1(y)
         y = autograd.relu(y)
-        y = autograd.dropout(y, ratio=0.3)
+        y = autograd.dropout(y, 0.3)
         # conv1_2: conv_bn_relu
         y = self.conv2(y)
         y = self.bn2(y)

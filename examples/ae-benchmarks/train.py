@@ -104,6 +104,7 @@ def run(global_rank,
         data,
         sgd,
         graph,
+        input_size=224,
         dist_option='fp32',
         spars=None):
     dev = device.create_cuda_gpu_on(local_rank)
@@ -128,8 +129,9 @@ def run(global_rank,
 
     if model == 'resnet':
         from model import resnet
-        model = resnet.resnet18(num_channels=num_channels,
-                                num_classes=num_classes)
+        model = resnet.resnet50(num_channels=num_channels,
+                                num_classes=num_classes,
+                                in_size=input_size)
     elif model == 'xceptionnet':
         from model import xceptionnet
         model = xceptionnet.create_model(num_channels=num_channels,
@@ -283,6 +285,11 @@ if __name__ == '__main__':
                         type=int,
                         help='maximum epochs',
                         dest='max_epoch')
+    parser.add_argument('--in-size',
+                        default=224,
+                        type=int,
+                        help='input dataset size',
+                        dest='input_size')
     parser.add_argument('--bs',
                         '--batch-size',
                         default=64,
@@ -313,4 +320,4 @@ if __name__ == '__main__':
 
     sgd = opt.SGD(lr=args.lr, momentum=0.9, weight_decay=1e-5)
     run(0, 1, args.device_id, args.max_epoch, args.batch_size, args.model,
-        args.data, sgd, args.graph)
+        args.data, sgd, args.graph, args.input_size)
