@@ -112,14 +112,14 @@ class Xception(module.Module):
     https://arxiv.org/pdf/1610.02357.pdf
     """
 
-    def __init__(self, num_classes=10, num_channels=3):
+    def __init__(self, num_classes=10, num_channels=3, in_size=299):
         """ Constructor
         Args:
             num_classes: number of classes
         """
         super(Xception, self).__init__()
         self.num_classes = num_classes
-        self.input_size = 299
+        self.input_size = in_size
         self.dimension = 4
 
         self.conv1 = autograd.Conv2d(num_channels, 32, 3, 2, 0, bias=False)
@@ -216,7 +216,14 @@ class Xception(module.Module):
         self.bn4 = autograd.BatchNorm2d(2048)
 
         self.globalpooling = autograd.MaxPool2d(10, 1)
-        self.fc = autograd.Linear(2048, num_classes)
+        if self.input_size == 299:
+            self.fc = autograd.Linear(2048, num_classes)
+        elif self.input_size == 416:
+            self.fc = autograd.Linear(32768, num_classes)
+        elif self.input_size == 720:
+            self.fc = autograd.Linear(401408, num_classes)
+        elif self.input_size == 1280:
+            self.fc = autograd.Linear(1968128, num_classes)
 
     def features(self, input):
         x = self.conv1(input)

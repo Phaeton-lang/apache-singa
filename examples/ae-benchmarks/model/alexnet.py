@@ -23,17 +23,27 @@ from singa import module
 
 class AlexNet(module.Module):
 
-    def __init__(self, num_classes=10, num_channels=1):
+    def __init__(self, num_classes=10, num_channels=1, in_size=224):
         super(AlexNet, self).__init__()
         self.num_classes = num_classes
-        self.input_size = 224
+        self.input_size = in_size
         self.dimension = 4
         self.conv1 = autograd.Conv2d(num_channels, 64, 11, stride=4, padding=2)
         self.conv2 = autograd.Conv2d(64, 192, 5, padding=2)
         self.conv3 = autograd.Conv2d(192, 384, 3, padding=1)
         self.conv4 = autograd.Conv2d(384, 256, 3, padding=1)
         self.conv5 = autograd.Conv2d(256, 256, 3, padding=1)
-        self.linear1 = autograd.Linear(1024, 4096)
+        if self.input_size == 300:
+            self.linear1 = autograd.Linear(4096, 4096)
+        elif self.input_size == 224 or\
+                self.input_size == 184:
+            self.linear1 = autograd.Linear(1024, 4096)
+        elif self.input_size == 416:
+            self.linear1 = autograd.Linear(6400, 4096)
+        elif self.input_size == 720:
+            self.linear1 = autograd.Linear(25600, 4096)
+        elif self.input_size == 1280:
+            self.linear1 = autograd.Linear(92416, 4096)
         self.linear2 = autograd.Linear(4096, 4096)
         self.linear3 = autograd.Linear(4096, num_classes)
         self.pooling1 = autograd.MaxPool2d(2, 2, padding=0)

@@ -129,13 +129,14 @@ def run(global_rank,
 
     if model == 'resnet':
         from model import resnet
-        model = resnet.resnet50(num_channels=num_channels,
+        model = resnet.resnet18(num_channels=num_channels,
                                 num_classes=num_classes,
                                 in_size=input_size)
     elif model == 'xceptionnet':
         from model import xceptionnet
         model = xceptionnet.create_model(num_channels=num_channels,
-                                         num_classes=num_classes)
+                                         num_classes=num_classes,
+                                         in_size=input_size)
     elif model == 'cnn':
         from model import cnn
         model = cnn.create_model(num_channels=num_channels,
@@ -143,7 +144,8 @@ def run(global_rank,
     elif model == 'alexnet':
         from model import alexnet
         model = alexnet.create_model(num_channels=num_channels,
-                                     num_classes=num_classes)
+                                     num_classes=num_classes,
+                                     in_size=input_size)
     elif model == 'vgg':
         from model import vgg
         model = vgg.create_model(num_channels=num_channels,
