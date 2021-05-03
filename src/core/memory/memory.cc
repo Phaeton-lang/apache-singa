@@ -496,7 +496,7 @@ void SwapPool::Free(void *ptr) {
     cudaError_t status = cudaFree(ptr);
     // JSON LEE: trace cudaFree failure status
     if (status == cudaErrorInvalidValue) {
-      std::cout << __FILE__ << __func__ << ":" << __LINE__ << " "
+      std::cout << __FILE__ << ":" << __LINE__ << " " << __func__ << " "
                 << cudaGetErrorName(status) << '\n';
     }
     CHECK_EQ(status, cudaError_t::cudaSuccess);
